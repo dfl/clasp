@@ -1,0 +1,11 @@
+[submodule "extern/clap"]
+	path = extern/clap
+	url = https://github.com/free-audio/clap.git
+
+[submodule "extern/clap-helpers"]
+	path = extern/clap-helpers
+	url = https://github.com/free-audio/clap-helpers.git
+
+[submodule "extern/choc"]
+	path = extern/choc
+	url = https://github.com/Tracktion/choc.git

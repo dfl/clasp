@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gain</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #eee;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 20px;
+            color: #888;
+        }
+
+        .knob-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .knob {
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle at 30% 30%, #3d4f6f, #1a2744);
+            border-radius: 50%;
+            position: relative;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3),
+                        inset 0 -2px 5px rgba(0,0,0,0.2),
+                        inset 0 2px 5px rgba(255,255,255,0.1);
+        }
+
+        .knob::after {
+            content: '';
+            position: absolute;
+            top: 15%;
+            left: 50%;
+            width: 4px;
+            height: 25%;
+            background: #4fc3dc;
+            border-radius: 2px;
+            transform-origin: bottom center;
+            transform: translateX(-50%);
+            box-shadow: 0 0 8px #4fc3dc;
+        }
+
+        .knob-label {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #888;
+        }
+
+        .knob-value {
+            font-size: 24px;
+            font-weight: 300;
+            margin-top: 5px;
+            color: #4fc3dc;
+        }
+
+        .db-value {
+            font-size: 12px;
+            color: #666;
+            margin-top: 2px;
+        }
+    </style>
+</head>
+<body>
+    <h1>CLASP Gain</h1>
+
+    <div class="knob-container">
+        <div class="knob" id="gainKnob"></div>
+        <div class="knob-label">Gain</div>
+        <div class="knob-value" id="gainValue">1.00</div>
+        <div class="db-value" id="gainDb">0.0 dB</div>
+    </div>
+
+    <script>
+        // Knob interaction
+        const knob = document.getElementById('gainKnob');
+        const valueDisplay = document.getElementById('gainValue');
+        const dbDisplay = document.getElementById('gainDb');
+
+        let isDragging = false;
+        let startY = 0;
+        let startValue = 1.0;
+        let currentValue = 1.0;
+
+        const MIN_VALUE = 0.0;
+        const MAX_VALUE = 2.0;
+
+        function valueToAngle(value) {
+            const normalized = (value - MIN_VALUE) / (MAX_VALUE - MIN_VALUE);
+            return -135 + normalized * 270; // -135 to 135 degrees
+        }
+
+        function updateDisplay(value) {
+            currentValue = value;
+            knob.style.transform = `rotate(${valueToAngle(value)}deg)`;
+            valueDisplay.textContent = value.toFixed(2);
+
+            // Calculate dB
+            const db = value > 0 ? 20 * Math.log10(value) : -Infinity;
+            dbDisplay.textContent = isFinite(db) ? `${db.toFixed(1)} dB` : '-∞ dB';
+        }
+
+        knob.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            startY = e.clientY;
+            startValue = currentValue;
+            document.body.style.cursor = 'grabbing';
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+
+            const delta = (startY - e.clientY) / 100;
+            let newValue = startValue + delta * (MAX_VALUE - MIN_VALUE);
+            newValue = Math.max(MIN_VALUE, Math.min(MAX_VALUE, newValue));
+
+            updateDisplay(newValue);
+
+            // Send to plugin
+            if (window.clasp) {
+                clasp.setParam(0, newValue);
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+            document.body.style.cursor = '';
+        });
+
+        // Double-click to reset
+        knob.addEventListener('dblclick', () => {
+            updateDisplay(1.0);
+            if (window.clasp) {
+                clasp.setParam(0, 1.0);
+            }
+        });
+
+        // Receive parameter updates from plugin
+        window.onClaspReady = function() {
+            // Get initial value
+            const value = clasp.getParam(0);
+            updateDisplay(value);
+
+            // Set up change listener
+            clasp.onParamChange = function(paramId, value) {
+                if (paramId === 0) {
+                    updateDisplay(value);
+                }
+            };
+        };
+
+        // Initial display
+        updateDisplay(1.0);
+    </script>
+</body>
+</html>

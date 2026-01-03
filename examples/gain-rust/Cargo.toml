@@ -1,0 +1,17 @@
+[package]
+name = "gain-rust"
+version = "1.0.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+
+# Build target: wasm32-wasi
+# Build with: cargo build --target wasm32-wasi --release
+# Then copy target/wasm32-wasi/release/gain_rust.wasm to dsp.wasm

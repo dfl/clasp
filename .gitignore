@@ -1,0 +1,16 @@
+# Build directories
+build/
+dist/
+
+# IDE
+.vscode/
+.idea/
+*.xcodeproj/
+*.xcworkspace/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Dependencies (auto-fetched)
+lib/wasmtime/
