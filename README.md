@@ -212,15 +212,57 @@ html, body {
 ### JavaScript API
 
 ```javascript
+// Parameter control
 clasp.setParam(id, value)     // Set parameter value
-clasp.getParam(id)            // Get parameter value
-clasp.getPluginInfo()         // Get plugin metadata
-clasp.onParamChange = fn      // Callback for automation updates
+clasp.getParam(id)            // Get parameter value  
+clasp.getPluginInfo()         // Get plugin metadata {id, name, parameters[]}
+
+// Callbacks from host (set these in your UI)
+clasp.onParamChange = (id, value) => {}  // Automation updates
+clasp.onNoteOn = (channel, key, velocity) => {}  // MIDI note on
+clasp.onNoteOff = (channel, key, velocity) => {} // MIDI note off
+clasp.onMidiCC = (channel, cc, value) => {}      // MIDI CC
+
+// MIDI Learn
+clasp.startMidiLearn(paramId) // Enter learn mode for parameter
+clasp.stopMidiLearn()         // Cancel learn mode
+clasp.mapMidiCC(ch, cc, paramId) // Manually map CC to parameter
+clasp.unmapMidiCC(ch, cc)     // Remove mapping
 ```
 
 ### Developer Tools
 
-**Right-click in the WebView to open Developer Tools** for debugging your UI. This provides a full browser inspector with console, network, and DOM inspection. Developer tools are enabled by default for development.
+**Right-click in the WebView to open Developer Tools** for debugging your UI. This provides a full browser inspector with console, network, and DOM inspection. Developer tools are enabled in debug builds.
+
+### Using TypeScript
+
+TypeScript must be compiled to JavaScript before use. Recommended workflow:
+
+```bash
+# Create a TypeScript project in your ui/ folder
+cd MyPlugin.clasp/ui
+npm init -y
+npm install -D typescript vite
+
+# Development with hot reload
+npx vite dev
+
+# Build for production
+npx vite build
+# Copy dist/ contents to ui/ folder
+```
+
+Your `vite.config.ts`:
+```typescript
+export default {
+  build: {
+    outDir: '.', // Output directly to ui/
+    rollupOptions: {
+      input: 'index.html'
+    }
+  }
+}
+```
 
 ## AOT Caching
 

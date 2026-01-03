@@ -180,8 +180,15 @@ bool Gui::create(const char *api, bool isFloating) {
       });
 
   // Inject the clasp JavaScript API
+#ifndef NDEBUG
+  bool enableDebugMode = true;
+#else
+  bool enableDebugMode = false;
+#endif
+
   std::string initScript = R"(
         window.clasp = {
+            // Parameter control
             setParam: function(id, value) {
                 return clasp_setParam(id, value);
             },
@@ -191,7 +198,42 @@ bool Gui::create(const char *api, bool isFloating) {
             getPluginInfo: function() {
                 return clasp_getPluginInfo();
             },
-            onParamChange: null  // Set by UI to receive updates
+            
+            // Callbacks from host (set by UI)
+            onParamChange: null,   // function(id, value) - called on automation
+            onNoteOn: null,        // function(channel, key, velocity) - MIDI note on
+            onNoteOff: null,       // function(channel, key, velocity) - MIDI note off
+            onMidiCC: null,        // function(channel, cc, value) - MIDI CC
+            
+            // MIDI Learn API
+            midiLearnActive: false,
+            midiLearnTarget: null, // { paramId: number } when learning
+            
+            startMidiLearn: function(paramId) {
+                this.midiLearnActive = true;
+                this.midiLearnTarget = { paramId: paramId };
+                console.log('MIDI Learn started for param ' + paramId);
+            },
+            
+            stopMidiLearn: function() {
+                this.midiLearnActive = false;
+                this.midiLearnTarget = null;
+                console.log('MIDI Learn stopped');
+            },
+            
+            // MIDI mappings (CC -> paramId)
+            midiMappings: {},
+            
+            mapMidiCC: function(channel, cc, paramId) {
+                var key = channel + ':' + cc;
+                this.midiMappings[key] = paramId;
+                console.log('Mapped MIDI CC ' + cc + ' ch ' + channel + ' to param ' + paramId);
+            },
+            
+            unmapMidiCC: function(channel, cc) {
+                var key = channel + ':' + cc;
+                delete this.midiMappings[key];
+            }
         };
 
         // Notify UI when loaded
@@ -352,6 +394,69 @@ void Gui::notifyParameterChanged(int paramId, float value) {
     std::string js = "if (window.clasp && window.clasp.onParamChange) { "
                      "window.clasp.onParamChange(" +
                      std::to_string(paramId) + ", " + std::to_string(value) +
+                     "); }";
+    impl_->webview->evaluateJavascript(js);
+  }
+#endif
+}
+
+void Gui::queueParameterUpdate(int paramId, float value) {
+  // Throttle updates - skip if we updated too recently
+  if (paramId >= 0 && paramId < MAX_PARAMS) {
+    auto now = std::chrono::steady_clock::now();
+    if (now - lastParamUpdate_[paramId] < UPDATE_INTERVAL) {
+      return; // Skip - too soon since last update
+    }
+    lastParamUpdate_[paramId] = now;
+  }
+
+  std::lock_guard<std::mutex> lock(updateMutex_);
+  pendingParams_.push_back({paramId, value});
+}
+
+void Gui::queueNoteOn(int channel, int key, float velocity) {
+  std::lock_guard<std::mutex> lock(updateMutex_);
+  pendingNotes_.push_back({channel, key, velocity, true});
+}
+
+void Gui::queueNoteOff(int channel, int key) {
+  std::lock_guard<std::mutex> lock(updateMutex_);
+  pendingNotes_.push_back({channel, key, 0.0f, false});
+}
+
+void Gui::processQueuedUpdates() {
+#if CLASP_HAS_WEBVIEW
+  if (!impl_->webview || !visible_)
+    return;
+
+  std::vector<ParamUpdate> params;
+  std::vector<NoteEvent> notes;
+
+  {
+    std::lock_guard<std::mutex> lock(updateMutex_);
+    params = std::move(pendingParams_);
+    notes = std::move(pendingNotes_);
+    pendingParams_.clear();
+    pendingNotes_.clear();
+  }
+
+  // Process parameter updates
+  for (const auto &p : params) {
+    std::string js = "if (window.clasp && window.clasp.onParamChange) { "
+                     "window.clasp.onParamChange(" +
+                     std::to_string(p.id) + ", " + std::to_string(p.value) +
+                     "); }";
+    impl_->webview->evaluateJavascript(js);
+  }
+
+  // Process MIDI notes
+  for (const auto &n : notes) {
+    std::string eventName = n.isNoteOn ? "onNoteOn" : "onNoteOff";
+    std::string js = "if (window.clasp && window.clasp." + eventName +
+                     ") { "
+                     "window.clasp." +
+                     eventName + "(" + std::to_string(n.channel) + ", " +
+                     std::to_string(n.key) + ", " + std::to_string(n.velocity) +
                      "); }";
     impl_->webview->evaluateJavascript(js);
   }
