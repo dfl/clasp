@@ -30,13 +30,23 @@ add_subdirectory(extern/clap-helpers EXCLUDE_FROM_ALL)
 set(CHOC_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/extern/choc")
 
 # clasp library (shared code)
-add_library(clasp_core STATIC
+set(CLASP_CORE_SOURCES
     src/runtime.cpp
     src/scanner.cpp
     src/params.cpp
     src/state.cpp
     src/gui.cpp
 )
+
+# Add platform-specific GUI embedding
+if(APPLE)
+    list(APPEND CLASP_CORE_SOURCES src/gui_cocoa.mm)
+    set_source_files_properties(src/gui_cocoa.mm PROPERTIES
+        COMPILE_FLAGS "-fobjc-arc"
+    )
+endif()
+
+add_library(clasp_core STATIC ${CLASP_CORE_SOURCES})
 
 target_include_directories(clasp_core PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include
@@ -97,9 +107,17 @@ if(APPLE)
 endif()
 
 # Install target
+if(APPLE)
+    set(CLAP_INSTALL_DIR "$ENV{HOME}/Library/Audio/Plug-Ins/CLAP")
+elseif(WIN32)
+    set(CLAP_INSTALL_DIR "$ENV{COMMONPROGRAMFILES}/CLAP")
+else()
+    set(CLAP_INSTALL_DIR "$ENV{HOME}/.clap")
+endif()
+
 install(TARGETS clasp
-    LIBRARY DESTINATION lib/clap
-    BUNDLE DESTINATION lib/clap
+    LIBRARY DESTINATION "${CLAP_INSTALL_DIR}"
+    BUNDLE DESTINATION "${CLAP_INSTALL_DIR}"
 )
 
 # Examples (WASM plugins are built separately with wasi-sdk/cargo)

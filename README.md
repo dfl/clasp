@@ -158,7 +158,35 @@ Discovered plugins appear in your DAW as "Plugin Name (clasp)".
 
 ## UI Development
 
-Create `ui/index.html` in your bundle:
+Create `ui/index.html` in your bundle. Add UI dimensions to `plugin.json`:
+
+```json
+{
+  "ui": {
+    "entry": "ui/index.html",
+    "width": 300,
+    "height": 200
+  }
+}
+```
+
+### CSS Best Practices
+
+For a polished plugin UI, disable text selection and scrolling:
+
+```css
+html, body {
+    /* Disable text selection */
+    user-select: none;
+    -webkit-user-select: none;
+    
+    /* Disable scrolling and overscroll */
+    overflow: hidden;
+    overscroll-behavior: none;
+}
+```
+
+### Example UI
 
 ```html
 <!DOCTYPE html>
@@ -189,6 +217,10 @@ clasp.getParam(id)            // Get parameter value
 clasp.getPluginInfo()         // Get plugin metadata
 clasp.onParamChange = fn      // Callback for automation updates
 ```
+
+### Developer Tools
+
+**Right-click in the WebView to open Developer Tools** for debugging your UI. This provides a full browser inspector with console, network, and DOM inspection. Developer tools are enabled by default for development.
 
 ## AOT Caching
 

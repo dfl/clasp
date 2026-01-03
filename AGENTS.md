@@ -92,8 +92,37 @@ Compiled WASM cached at `~/.clasp/cache/<name>_<hash>.cwasm`
 ## Common Issues
 
 - **std::atomic in vector**: Atomics aren't copyable; use `std::unique_ptr<std::atomic<T>[]>` instead
-- **CHOC WebView has no setSize()**: Size managed by parent window, not WebView
-- **macOS quarantine**: `make install` handles xattr removal and ad-hoc signing
+- **CHOC WebView has no setSize()**: Size managed by parent window via gui_cocoa.mm
+- **macOS quarantine**: `make install` handles xattr removal and ad-hoc signing  
+- **CHOC value types**: JavaScript numbers may arrive as int32, int64, or float64. Use `isInt32()`, `isInt64()`, `isFloat64()` checks with `get<T>()` template
+
+## WebView/GUI Development
+
+### JavaScript API
+
+The WebView exposes these bindings:
+
+```javascript
+clasp.setParam(id, value)     // Set parameter (flows to DSP)
+clasp.getParam(id)            // Get parameter value
+clasp.getPluginInfo()         // Get plugin metadata
+clasp.onParamChange = fn      // Callback for host automation
+```
+
+### Developer Tools
+
+**Right-click in the WebView** to open browser Developer Tools (console, network, DOM inspector). This is enabled via `options.enableDebugMode = true` in gui.cpp.
+
+### UI Best Practices
+
+```css
+html, body {
+    user-select: none;           /* Disable text selection */
+    -webkit-user-select: none;
+    overflow: hidden;            /* Disable scrolling */
+    overscroll-behavior: none;
+}
+```
 
 ## Version
 
@@ -105,3 +134,4 @@ No test suite yet. Manual testing:
 1. Build and install clasp.clap
 2. Build example plugin, copy to ~/.clasp/plugins/
 3. Open DAW, scan plugins, look for "Plugin Name (clasp)"
+4. Open GUI, move controls, verify parameter changes affect audio
