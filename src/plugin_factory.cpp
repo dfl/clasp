@@ -170,6 +170,12 @@ public:
       if (event->type == CLAP_EVENT_PARAM_VALUE) {
         auto pv = reinterpret_cast<const clap_event_param_value_t *>(event);
         instance_.setParameterValue(pv->param_id, pv->value);
+
+        // Notify GUI of automation changes
+        if (gui_) {
+          gui_->notifyParameterChanged(static_cast<int>(pv->param_id),
+                                       static_cast<float>(pv->value));
+        }
       }
     }
   }
@@ -180,7 +186,17 @@ public:
   }
 
   bool stateLoad(const clap_istream_t *stream) {
-    return instance_.loadState(stream);
+    bool result = instance_.loadState(stream);
+
+    // Notify GUI of all parameter values after loading state
+    if (result && gui_) {
+      for (const auto &param : manifest_.parameters) {
+        float value = static_cast<float>(instance_.getParameterValue(param.id));
+        gui_->notifyParameterChanged(param.id, value);
+      }
+    }
+
+    return result;
   }
 
   // Audio ports extension
