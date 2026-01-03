@@ -171,10 +171,10 @@ public:
         auto pv = reinterpret_cast<const clap_event_param_value_t *>(event);
         instance_.setParameterValue(pv->param_id, pv->value);
 
-        // Notify GUI of automation changes
+        // Queue GUI update (thread-safe, will be processed on main thread)
         if (gui_) {
-          gui_->notifyParameterChanged(static_cast<int>(pv->param_id),
-                                       static_cast<float>(pv->value));
+          gui_->queueParameterUpdate(static_cast<int>(pv->param_id),
+                                     static_cast<float>(pv->value));
         }
       }
     }
