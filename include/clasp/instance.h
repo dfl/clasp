@@ -2,6 +2,7 @@
 
 #include "clasp/runtime.h"
 #include "clasp/scanner.h"
+#include "clasp/wclap_runtime.h"
 #include <atomic>
 #include <clap/clap.h>
 #include <memory>
@@ -134,6 +135,62 @@ private:
 
   // Apply parameter changes to WASM
   void applyParameterChanges();
+};
+
+// Plugin instance wrapping a full WCLAP plugin (.wclap bundles)
+class WclapPluginInstance : public IPluginInstance {
+public:
+  WclapPluginInstance(const PluginManifest &manifest);
+  ~WclapPluginInstance() override;
+
+  // CLAP lifecycle
+  bool init() override;
+  void destroy() override;
+  bool activate(double sampleRate, uint32_t minFrames,
+                uint32_t maxFrames) override;
+  void deactivate() override;
+  bool startProcessing() override;
+  void stopProcessing() override;
+  void reset() override;
+
+  // Audio processing
+  clap_process_status process(const clap_process_t *process) override;
+
+  // Parameters (thread-safe)
+  void setParameterValue(clap_id paramId, double value) override;
+  double getParameterValue(clap_id paramId) const override;
+
+  // State
+  bool saveState(const clap_ostream_t *stream) override;
+  bool loadState(const clap_istream_t *stream) override;
+
+  // UI messages
+  void onMessage(const void *buffer, uint32_t size) override;
+
+  // Info
+  const PluginManifest &manifest() const override { return manifest_; }
+  bool isInstrument() const override { return manifest_.isInstrument; }
+  bool hasUi() const override { return manifest_.ui.hasUi; }
+  uint32_t latency() const override { return 0; } // TODO: query from WASM
+  uint32_t tail() const override { return 0; }    // TODO: query from WASM
+
+private:
+  PluginManifest manifest_;
+  std::unique_ptr<wclap::Instance<WasmtimeInstance>> wasm_;
+
+  // WASM pointers to CLAP plugin interface
+  uint64_t pluginPtr_ = 0;      // clap_plugin_t* in WASM
+  uint64_t processPtr_ = 0;     // clap_process_t* in WASM (reused)
+
+  // Processing state
+  bool activated_ = false;
+  bool processing_ = false;
+  double sampleRate_ = 44100.0;
+  uint32_t maxBlockSize_ = 512;
+
+  // Parameter cache
+  std::unique_ptr<std::atomic<float>[]> paramValues_;
+  size_t paramCount_ = 0;
 };
 
 } // namespace clasp
