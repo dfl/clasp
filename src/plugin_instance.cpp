@@ -2,8 +2,32 @@
 #include "clasp/runtime.h"
 #include <algorithm>
 #include <cstring>
+#include <iostream>
 
 namespace clasp {
+
+// Factory function to create appropriate instance type
+std::unique_ptr<IPluginInstance>
+createPluginInstance(const PluginManifest &manifest) {
+  switch (manifest.bundleType) {
+  case BundleType::Clasp:
+    return std::make_unique<PluginInstance>(manifest);
+
+  case BundleType::Wclap:
+    // TODO: Implement WclapPluginInstance
+    // This requires:
+    // 1. Loading module with WclapRuntime
+    // 2. Finding clap_entry export
+    // 3. Calling init() -> factory -> create_plugin()
+    // 4. Forwarding all CLAP calls to WASM plugin
+    std::cerr << "[clasp] WCLAP bundles not yet implemented: "
+              << manifest.bundlePath << std::endl;
+    return nullptr;
+
+  default:
+    return nullptr;
+  }
+}
 
 PluginInstance::PluginInstance(const PluginManifest &manifest)
     : manifest_(manifest), paramCount_(manifest.parameters.size()) {

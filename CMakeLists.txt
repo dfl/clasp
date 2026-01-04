@@ -29,9 +29,13 @@ add_subdirectory(extern/clap-helpers EXCLUDE_FROM_ALL)
 # CHOC is header-only, just need to add include path
 set(CHOC_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/extern/choc")
 
+# wclap-cpp is header-only
+set(WCLAP_CPP_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/extern/wclap-cpp/include")
+
 # clasp library (shared code)
 set(CLASP_CORE_SOURCES
     src/runtime.cpp
+    src/wclap_runtime.cpp
     src/scanner.cpp
     src/params.cpp
     src/state.cpp
@@ -55,6 +59,7 @@ add_library(clasp_core STATIC ${CLASP_CORE_SOURCES})
 target_include_directories(clasp_core PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CHOC_INCLUDE_DIR}
+    ${WCLAP_CPP_INCLUDE_DIR}
     ${WASMTIME_INCLUDE_DIR}
 )
 

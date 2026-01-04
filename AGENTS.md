@@ -4,7 +4,7 @@ This file provides context for AI coding agents working on this codebase.
 
 ## Project Overview
 
-CLASP is a native CLAP audio plugin that hosts WebAssembly DSP modules. It's the inverse of WebCLAP (which hosts CLAP in browsers) - CLASP hosts WASM in native DAWs.
+CLASP is a native CLAP audio plugin that hosts WebAssembly modules. It's a cross-platform implementation compatible with the [WCLAP](https://github.com/WebCLAP) ecosystem - both host WASM plugins as native CLAP in DAWs. CLASP adds Windows/Linux support, AOT caching, and WebView GUI.
 
 **Tagline:** Native CLAP wrapper for WASM — compile once, run everywhere!
 
@@ -38,7 +38,13 @@ extern/                 # Git submodules (clap, clap-helpers, choc)
 
 ## DSP ABI
 
-WASM plugins export these functions (see `include/clasp/runtime.h` for DspFunctions struct):
+> **Migration in progress**: CLASP is adopting the [WCLAP ABI](https://github.com/WebCLAP/wclap-cpp) for full CLAP compatibility. The legacy ABI below is being replaced.
+
+### WCLAP ABI (new)
+WASM modules export `clap_entry` and implement the full CLAP plugin interface. See [WCLAP.md](WCLAP.md) for details and upstream proposals.
+
+### Legacy ABI (deprecated)
+The following custom ABI is being phased out:
 
 ```c
 // Required
