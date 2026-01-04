@@ -118,6 +118,7 @@ public:
 
   bool startProcessing() { return instance_.startProcessing(); }
   void stopProcessing() { instance_.stopProcessing(); }
+  void reset() { instance_.reset(); }
 
   clap_process_status process(const clap_process_t *process) {
     bool guiUpdateQueued = false;
@@ -332,6 +333,12 @@ public:
 
   bool guiCanResize() { return gui_ && gui_->canResize(); }
 
+  bool guiGetResizeHints(clap_gui_resize_hints_t *hints) {
+    if (!gui_)
+      return false;
+    return gui_->getResizeHints(hints);
+  }
+
   bool guiAdjustSize(uint32_t *width, uint32_t *height) {
     if (!gui_)
       return false;
@@ -360,6 +367,17 @@ public:
     if (!gui_)
       return false;
     return gui_->hide();
+  }
+
+  bool guiSetTransient(const clap_window_t *window) {
+    if (!gui_)
+      return false;
+    return gui_->setTransient(window);
+  }
+
+  void guiSuggestTitle(const char *title) {
+    if (gui_)
+      gui_->suggestTitle(title);
   }
 
   // Process queued GUI updates (called from main thread)
@@ -413,7 +431,7 @@ struct PluginWrapper {
       static_cast<PluginWrapper *>(p->plugin_data)->impl.stopProcessing();
     };
     plugin.reset = [](const clap_plugin_t *p) {
-      // Reset is optional
+      static_cast<PluginWrapper *>(p->plugin_data)->impl.reset();
     };
     plugin.process = [](const clap_plugin_t *p,
                         const clap_process_t *proc) -> clap_process_status {
@@ -534,7 +552,8 @@ static const clap_plugin_gui_t guiExtension = {
     },
     .get_resize_hints = [](const clap_plugin_t *p,
                            clap_gui_resize_hints_t *hints) -> bool {
-      return false;
+      return static_cast<PluginWrapper *>(p->plugin_data)
+          ->impl.guiGetResizeHints(hints);
     },
     .adjust_size = [](const clap_plugin_t *p, uint32_t *w,
                       uint32_t *h) -> bool {
@@ -550,8 +569,15 @@ static const clap_plugin_gui_t guiExtension = {
           ->impl.guiSetParent(win);
     },
     .set_transient = [](const clap_plugin_t *p,
-                        const clap_window_t *win) -> bool { return false; },
-    .suggest_title = [](const clap_plugin_t *p, const char *title) {},
+                        const clap_window_t *win) -> bool {
+      return static_cast<PluginWrapper *>(p->plugin_data)
+          ->impl.guiSetTransient(win);
+    },
+    .suggest_title =
+        [](const clap_plugin_t *p, const char *title) {
+          static_cast<PluginWrapper *>(p->plugin_data)
+              ->impl.guiSuggestTitle(title);
+        },
     .show = [](const clap_plugin_t *p) -> bool {
       return static_cast<PluginWrapper *>(p->plugin_data)->impl.guiShow();
     },
