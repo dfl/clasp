@@ -15,9 +15,20 @@
 
 ---
 
+## Download
+
+Pre-built binaries available on the [Releases](https://github.com/dfl/clasp/releases) page.
+
+Install `thunder.clap` to your CLAP plugins folder:
+- **macOS**: `~/Library/Audio/Plug-Ins/CLAP/`
+- **Windows**: `%LOCALAPPDATA%\Programs\Common\CLAP\`
+- **Linux**: `~/.clap/`
+
+---
+
 ## Quick Start
 
-### 1. Build thunder.clap
+### 1. Build thunder.clap (optional)
 
 ```bash
 # Clone with submodules
