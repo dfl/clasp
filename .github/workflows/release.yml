@@ -41,32 +41,37 @@ jobs:
       - name: Build (Unix)
         if: runner.os != 'Windows'
         run: |
-          cmake -B build -DCMAKE_BUILD_TYPE=Release
+          cmake -B build -DCMAKE_BUILD_TYPE=Release -DCLASP_BUILD_TESTS=ON
           cmake --build build --config Release --parallel
 
       - name: Build (Windows)
         if: runner.os == 'Windows'
         run: |
-          cmake -B build -DCMAKE_BUILD_TYPE=Release
+          cmake -B build -DCMAKE_BUILD_TYPE=Release -DCLASP_BUILD_TESTS=ON
           cmake --build build --config Release --parallel
+
+      - name: Run tests
+        run: |
+          cd build
+          ctest --output-on-failure
 
       - name: Package (macOS)
         if: runner.os == 'macOS'
         run: |
           cd build
-          zip -r ../clasp-${{ matrix.name }}.zip clasp.clap
+          zip -r ../clasp-${{ matrix.name }}.zip clasp.clap clasp-tool
 
       - name: Package (Linux)
         if: runner.os == 'Linux'
         run: |
           cd build
-          tar czf ../clasp-${{ matrix.name }}.tar.gz clasp.clap
+          tar czf ../clasp-${{ matrix.name }}.tar.gz clasp.clap clasp-tool
 
       - name: Package (Windows)
         if: runner.os == 'Windows'
         run: |
           cd build
-          7z a ../clasp-${{ matrix.name }}.zip clasp.clap
+          7z a ../clasp-${{ matrix.name }}.zip clasp.clap clasp-tool.exe
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
