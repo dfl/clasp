@@ -94,11 +94,9 @@ The `module.wasm` implements the standard CLAP ABI - the same interface as nativ
 
 ### Hot Reload
 
-Set the environment variable to enable automatic reloading when files change:
+**thunder.clap** automatically reloads your plugin when files change - no configuration needed! This enables rapid iteration during development.
 
-```bash
-export CLASP_HOT_RELOAD=1
-```
+> **Note**: Hot reload is always active in `thunder.clap`. For production use without hot reload, use [wclap-bridge](https://github.com/user/wclap-bridge) instead.
 
 ### WebView UI
 
@@ -163,7 +161,7 @@ clasp/
 ## Related Projects
 
 - [WCLAP](https://github.com/user/wclap) - WebAssembly CLAP specification
-- [wclap-bridge](https://github.com/user/wclap-bridge) - Wasmtime runtime for hosting WCLAP plugins
+- [wclap-bridge](https://github.com/user/wclap-bridge) - Production meta-host for WCLAP plugins (stable, no hot reload)
 - [wclap-cpp](https://github.com/user/wclap-cpp) - Header-only C++ library for WASM boundary marshalling
 - [clasp-gui](https://github.com/dfl/clasp-gui) - Decoupled WebView + Protocol library
 
