@@ -60,10 +60,12 @@ clasp-create "My Synth" --type instrument --lang cpp
 
 cd my_gain
 
-# Build (requires wasi-sdk)
-export WASI_SDK_PREFIX=/path/to/wasi-sdk
+# Build (wasi-sdk will be downloaded automatically if not found)
 mkdir build && cd build
 cmake .. && make && make install
+
+# Or specify a custom path if you already have it
+cmake .. -DWASI_SDK_PREFIX=/path/to/wasi-sdk && make && make install
 ```
 
 ### 3. Load in Your DAW
