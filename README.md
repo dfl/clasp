@@ -15,9 +15,10 @@ The goal is simple: write your audio logic once in C++, Rust, Zig, or AssemblySc
 ### Development Status
 We're currently in **1.0.0-beta**. I'm actively expanding support for more CLAP extensions and refining the cross-platform experience. If you find a bug or have a feature idea, I'd love to hear from you. Check out [CONTRIBUTING.md](CONTRIBUTING.md).
 
-#### 🗺️ Roadmap
-- **v1.0.0**: 🟨 Current WebView implementation (CHOC-based embedding).
-- **v1.0.1**: 🟩 Implement `CLAP_EXT_WEBVIEW` (Draft spec) for native host browser support, including resource serving and binary messaging.
+### 🌐 Standardized Web Views
+CLASP fully implements the **[CLAP WebView Draft Extension](https://github.com/free-audio/clap/blob/main/include/clap/ext/draft/webview.h)**.
+- **Host-Managed**: When running in a modern CLAP host, CLASP delegates the UI to the host's browser engine. This enables tighter integration, shared resources, and bidirectional binary messaging.
+- **Self-Contained**: In hosts without native webview support, CLASP automatically falls back to its internal, lightweight desktop window (powered by CHOC), ensuring your plugin GUI works correctly everywhere.
 
 ## 🚀 Download & Install
 
