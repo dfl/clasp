@@ -106,10 +106,6 @@ install(TARGETS clasp
     BUNDLE DESTINATION "${CLAP_INSTALL_DIR}"
 )
 
-# CLI Tools (legacy - being replaced by packages/clasp-create)
-add_executable(clasp-tool tools/clasp-tool.cpp)
-target_link_libraries(clasp-tool PRIVATE clasp_core)
-
 # Development Host Plugin
 option(CLASP_BUILD_DEV_HOST "Build clasp-host development plugin" ON)
 if(CLASP_BUILD_DEV_HOST)
