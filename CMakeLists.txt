@@ -62,6 +62,11 @@ target_link_libraries(clasp_core PUBLIC
     ${WASMTIME_LIBRARIES}
 )
 
+# Suppress GCC warnings from wclap-cpp headers (they use C-style struct naming)
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(clasp_core PRIVATE -Wno-changes-meaning)
+endif()
+
 # thunder.clap plugin (dev-oriented WCLAP host with hot-reload)
 add_library(thunder MODULE
     src/plugin_entry.cpp

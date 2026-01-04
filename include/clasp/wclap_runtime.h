@@ -5,6 +5,9 @@
 // This provides the bridge between wclap-cpp's Instance interface and Wasmtime.
 // It implements all the required methods for loading and running WCLAP modules.
 
+// Include cstddef before wclap headers (they use size_t without including it)
+#include <cstddef>
+
 #include <wclap/instance.hpp>
 #include <wclap/wclap.hpp>
 
