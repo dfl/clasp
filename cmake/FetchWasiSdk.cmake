@@ -38,6 +38,7 @@ if(WASI_SDK_GLOBAL_PATH AND EXISTS "${WASI_SDK_GLOBAL_PATH}")
     message(STATUS "Found wasi-sdk in: ${WASI_SDK_GLOBAL_PATH}")
     set(WASI_SDK_PREFIX "${WASI_SDK_GLOBAL_PATH}" CACHE PATH "wasi-sdk installation prefix")
 else()
+    set(WASI_SDK_URL "https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-${WASI_SDK_VERSION}/wasi-sdk-${WASI_SDK_VERSION}.0-${WASI_SDK_PLATFORM}.tar.gz")
     message(STATUS "Fetching wasi-sdk ${WASI_SDK_VERSION} for ${WASI_SDK_PLATFORM}...")
     message(STATUS "URL: ${WASI_SDK_URL}")
 
