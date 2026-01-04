@@ -54,6 +54,9 @@ public:
   bool saveState(const clap_ostream_t *stream);
   bool loadState(const clap_istream_t *stream);
 
+  // UI messages
+  void onMessage(const void *buffer, uint32_t size);
+
   // Info
   const PluginManifest &manifest() const { return manifest_; }
   bool isInstrument() const { return manifest_.isInstrument; }

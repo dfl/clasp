@@ -312,4 +312,10 @@ bool PluginInstance::loadState(const clap_istream_t *stream) {
   return true;
 }
 
+void PluginInstance::onMessage(const void *buffer, uint32_t size) {
+  if (wasm_) {
+    wasm_->onMessage(buffer, size);
+  }
+}
+
 } // namespace clasp

@@ -81,6 +81,10 @@ struct DspFunctions {
   wasmtime_func_t noteOff;
   wasmtime_func_t noteExpression;
 
+  // UI messaging (optional)
+  wasmtime_func_t onMessage;
+  wasmtime_func_t getMessageBuffer;
+
   bool hasInstrumentSupport = false;
 };
 
@@ -117,6 +121,9 @@ public:
                int16_t key, float velocity);
   void noteExpression(int32_t sampleOffset, int16_t noteId, int16_t channel,
                       int16_t key, int32_t expressionId, float value);
+
+  // Messaging
+  void onMessage(const void *buffer, uint32_t size);
 
   // Memory access
   uint8_t *memoryBase();

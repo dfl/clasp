@@ -16,8 +16,8 @@ The goal is simple: write your audio logic once in C++, Rust, Zig, or AssemblySc
 We're currently in **1.0.0-beta**. I'm actively expanding support for more CLAP extensions and refining the cross-platform experience. If you find a bug or have a feature idea, I'd love to hear from you. Check out [CONTRIBUTING.md](CONTRIBUTING.md).
 
 #### 🗺️ Roadmap
-- **v1.0.0**: Release final stable build with existing WebView implementation.
-- **v1.0.1**: Implement the draft `CLAP_EXT_WEBVIEW` extension for standardized, host-managed web UIs.
+- **v1.0.0**: 🟨 Current WebView implementation (CHOC-based embedding).
+- **v1.0.1**: 🟩 Implement `CLAP_EXT_WEBVIEW` (Draft spec) for native host browser support, including resource serving and binary messaging.
 
 ## 🚀 Download & Install
 

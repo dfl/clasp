@@ -1,10 +1,13 @@
 #include "clasp/gui.h"
 #include "clasp/instance.h"
 #include "clasp/scanner.h"
+#include <algorithm>
 #include <clap/clap.h>
+#include <clap/ext/draft/webview.h>
 #include <clap/helpers/host-proxy.hh>
 #include <clap/helpers/plugin.hh>
 #include <cstring>
+#include <fstream>
 #include <iostream>
 #include <memory>
 #include <vector>
@@ -348,6 +351,67 @@ public:
     return gui_->adjustSize(width, height);
   }
 
+  // Webview extension (draft)
+  int32_t webviewGetUri(char *uri, uint32_t uriCapacity) {
+    std::string fullUri;
+    if (manifest_.ui.entry.find("://") != std::string::npos) {
+      fullUri = manifest_.ui.entry;
+    } else {
+      // Relative path to bundle-defined resource root
+      // Returning a path starting with / tells the host to use get_resource()
+      fullUri = "/" + manifest_.ui.entry;
+    }
+
+    if (uriCapacity == 0)
+      return static_cast<int32_t>(fullUri.length() + 1);
+
+    strncpy(uri, fullUri.c_str(), uriCapacity - 1);
+    uri[uriCapacity - 1] = '\0';
+    return static_cast<int32_t>(
+        std::min<size_t>(fullUri.length() + 1, uriCapacity));
+  }
+
+  bool webviewGetResource(const char *path, char *mime, uint32_t mimeCapacity,
+                          const clap_ostream_t *stream) {
+    // Basic resource loading from bundle ui/ directory
+    std::string fullPath = manifest_.bundlePath + "/ui" + path;
+    std::ifstream file(fullPath, std::ios::binary);
+    if (!file)
+      return false;
+
+    // Detect MIME type (very basic)
+    std::string sPath(path);
+    std::string type = "application/octet-stream";
+    if (sPath.ends_with(".html"))
+      type = "text/html";
+    else if (sPath.ends_with(".js"))
+      type = "text/javascript";
+    else if (sPath.ends_with(".css"))
+      type = "text/css";
+    else if (sPath.ends_with(".png"))
+      type = "image/png";
+    else if (sPath.ends_with(".wasm"))
+      type = "application/wasm";
+
+    strncpy(mime, type.c_str(), mimeCapacity - 1);
+    mime[mimeCapacity - 1] = '\0';
+
+    // Stream the data
+    char buffer[4096];
+    while (file.read(buffer, sizeof(buffer)) || file.gcount() > 0) {
+      int64_t written = stream->write(stream, buffer, file.gcount());
+      if (written != file.gcount())
+        return false;
+    }
+
+    return true;
+  }
+
+  bool webviewReceive(const void *buffer, uint32_t size) {
+    // TODO: Implement binary message routing to WASM instance
+    return true;
+  }
+
   bool guiSetSize(uint32_t width, uint32_t height) {
     if (!gui_)
       return false;
@@ -589,6 +653,25 @@ static const clap_plugin_gui_t guiExtension = {
     },
 };
 
+static const clap_plugin_webview_t webviewExtension = {
+    .get_uri = [](const clap_plugin_t *p, char *uri,
+                  uint32_t uri_capacity) -> int32_t {
+      return static_cast<PluginWrapper *>(p->plugin_data)
+          ->impl.webviewGetUri(uri, uri_capacity);
+    },
+    .get_resource = [](const clap_plugin_t *p, const char *path, char *mime,
+                       uint32_t mime_capacity,
+                       const clap_ostream_t *stream) -> bool {
+      return static_cast<PluginWrapper *>(p->plugin_data)
+          ->impl.webviewGetResource(path, mime, mime_capacity, stream);
+    },
+    .receive = [](const clap_plugin_t *p, const void *buffer,
+                  uint32_t size) -> bool {
+      return static_cast<PluginWrapper *>(p->plugin_data)
+          ->impl.webviewReceive(buffer, size);
+    },
+};
+
 const void *PluginWrapper::getExtension(const clap_plugin_t *p,
                                         const char *id) {
   if (strcmp(id, CLAP_EXT_PARAMS) == 0)
@@ -601,6 +684,8 @@ const void *PluginWrapper::getExtension(const clap_plugin_t *p,
     return &notePortsExtension;
   if (strcmp(id, CLAP_EXT_GUI) == 0)
     return &guiExtension;
+  if (strcmp(id, CLAP_EXT_WEBVIEW) == 0)
+    return &webviewExtension;
   if (strcmp(id, CLAP_EXT_LATENCY) == 0) {
     static const clap_plugin_latency_t latencyExt = {
         .get = [](const clap_plugin_t *p) -> uint32_t {

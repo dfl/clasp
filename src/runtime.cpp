@@ -327,6 +327,8 @@ std::unique_ptr<WasmInstance> Runtime::loadModule(const std::string &wasmPath) {
   funcs.hasInstrumentSupport = getFunc("dsp_note_on", &funcs.noteOn) &&
                                getFunc("dsp_note_off", &funcs.noteOff);
   getFunc("dsp_note_expression", &funcs.noteExpression);
+  getFunc("dsp_on_message", &funcs.onMessage);
+  getFunc("dsp_get_message_buffer", &funcs.getMessageBuffer);
 
   return std::make_unique<WasmInstance>(context_, instance, memory, funcs);
 }
@@ -595,6 +597,41 @@ void WasmInstance::noteExpression(int32_t sampleOffset, int16_t noteId,
   wasm_trap_t *trap = nullptr;
   wasmtime_error_t *error = wasmtime_func_call(context_, &funcs_.noteExpression,
                                                args, 6, nullptr, 0, &trap);
+  if (error)
+    wasmtime_error_delete(error);
+  if (trap)
+    wasm_trap_delete(trap);
+}
+
+// Helper to check if a function was resolved
+static bool isValid(const wasmtime_func_t &func) { return func.store_id != 0; }
+
+void WasmInstance::onMessage(const void *buffer, uint32_t size) {
+  if (!isValid(funcs_.onMessage) || !isValid(funcs_.getMessageBuffer))
+    return;
+
+  // Get offset from WASM
+  int32_t offset =
+      callIntInt(&funcs_.getMessageBuffer, static_cast<int32_t>(size));
+  if (offset == 0)
+    return;
+
+  // Copy data
+  uint8_t *base = memoryBase();
+  size_t memSize = memorySize();
+  if (static_cast<size_t>(offset) + size > memSize)
+    return;
+
+  std::memcpy(base + offset, buffer, size);
+
+  // Call onMessage
+  wasmtime_val_t args[2] = {
+      {.kind = WASMTIME_I32, .of = {.i32 = offset}},
+      {.kind = WASMTIME_I32, .of = {.i32 = (int32_t)size}}};
+  wasm_trap_t *trap = nullptr;
+  wasmtime_error_t *error = wasmtime_func_call(context_, &funcs_.onMessage,
+                                               args, 2, nullptr, 0, &trap);
+
   if (error)
     wasmtime_error_delete(error);
   if (trap)
