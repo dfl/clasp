@@ -163,6 +163,15 @@ if(CLASP_BUILD_TESTS)
         Catch2::Catch2WithMain
     )
     
+    if(WIN32)
+        add_custom_command(TARGET clasp_tests POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${WASMTIME_DLL}"
+            "$<TARGET_FILE_DIR:clasp_tests>/wasmtime.dll"
+            COMMENT "Copying wasmtime.dll to test output directory"
+        )
+    endif()
+    
     # Add project root for tests
     target_compile_definitions(clasp_tests PRIVATE CLASP_PROJECT_ROOT="${CMAKE_CURRENT_SOURCE_DIR}")
     
