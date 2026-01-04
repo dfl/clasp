@@ -15,6 +15,20 @@ The goal is simple: write your audio logic once in C++, Rust, Zig, or AssemblySc
 ### Development Status
 We're currently in **1.0.0-beta**. I'm actively expanding support for more CLAP extensions and refining the cross-platform experience. If you find a bug or have a feature idea, I'd love to hear from you. Check out [CONTRIBUTING.md](CONTRIBUTING.md).
 
+## 🚀 Download & Install
+
+For most users, I recommend downloading the pre-built binaries for your platform. 
+
+**[Get the latest CLASP release here](https://github.com/dflowenfels/clasp/releases)**
+
+1.  **Download** the `.zip` or `.tar.gz` for your operating system.
+2.  **Extract** the `clasp.clap` bundle and `clasp-tool`.
+3.  **Install** `clasp.clap` by copying it to your standard CLAP folder:
+    *   **macOS**: `~/Library/Audio/Plug-Ins/CLAP`
+    *   **Windows**: `%LOCALAPPDATA%\Programs\Common\CLAP`
+    *   **Linux**: `~/.clap`
+4.  **Verify**: Open your DAW and scan for new plugins. You should see "CLASP" as a loaded plugin.
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                      Your DAW (CLAP Host)                   │
@@ -52,9 +66,12 @@ I've always been frustrated by the friction of cross-platform audio development.
 
 ## Quick Start
 
-### 1. Build the Native Wrapper
+### 1. Get the Native Wrapper
 
-First, you'll need to build the host wrapper itself. This only needs to be done once.
+You need the `clasp.clap` host to run your plugins. You can either:
+
+*   **Download pre-built**: Grab the latest from [Releases](https://github.com/dflowenfels/clasp/releases).
+*   **Build from source** (Requires CMake and a C++ compiler):
 
 ```bash
 # Clone with submodules
