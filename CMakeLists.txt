@@ -106,11 +106,9 @@ install(TARGETS clasp
     BUNDLE DESTINATION "${CLAP_INSTALL_DIR}"
 )
 
-# Development Host Plugin
-option(CLASP_BUILD_DEV_HOST "Build clasp-host development plugin" ON)
-if(CLASP_BUILD_DEV_HOST)
-    add_subdirectory(packages/clasp-host)
-endif()
+# CLI tool for cache warming
+add_executable(clasp-warm tools/clasp-warm.cpp)
+target_link_libraries(clasp-warm PRIVATE clasp_core)
 
 # Examples (WASM plugins are built separately with wasi-sdk/cargo)
 if(CLASP_BUILD_EXAMPLES)
