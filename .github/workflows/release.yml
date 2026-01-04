@@ -66,7 +66,7 @@ jobs:
         if: runner.os == 'Windows'
         run: |
           cd build
-          7z a ../clasp-${{ matrix.name }}.zip clasp.clap clasp-tool.exe
+          7z a ../clasp-${{ matrix.name }}.zip Release/clasp.clap Release/clasp-tool.exe
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
