@@ -15,29 +15,6 @@
 
 ---
 
-## Architecture
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                      Your DAW (CLAP Host)                   │
-│                    (Bitwig, REAPER, etc.)                   │
-└─────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────┐
-│                 thunder.clap (Dev Meta-Host)                │
-│                                                             │
-│     Scanner        Wasmtime Engine        WebView GUI       │
-│  (finds .wclap)    (JIT + AOT cache)     (clasp-gui)        │
-└─────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────┐
-│                     YourPlugin.wclap                        │
-│         module.wasm (CLAP ABI)  +  ui/ (HTML/JS/CSS)        │
-└─────────────────────────────────────────────────────────────┘
-```
-
 ## Quick Start
 
 ### 1. Build thunder.clap
@@ -208,8 +185,7 @@ Contributions welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ## Author
 
-**David Lowenfels**
-Creative developer and DSP enthusiast.
+**[David Lowenfels](https://github.com/dfl)**
 
 ## License
 
