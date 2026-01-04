@@ -286,6 +286,9 @@ public:
     return true;
   }
 
+  uint32_t latency() const { return manifest_.audio.latency; }
+  uint32_t tail() const { return manifest_.audio.tailSize; }
+
   // GUI extension
   bool guiIsApiSupported(const char *api, bool isFloating) {
     if (!manifest_.ui.hasUi)
@@ -596,25 +599,23 @@ const void *PluginWrapper::getExtension(const clap_plugin_t *p,
     return &audioPortsExtension;
   if (strcmp(id, CLAP_EXT_NOTE_PORTS) == 0)
     return &notePortsExtension;
-}
-}
-if (strcmp(id, CLAP_EXT_LATENCY) == 0) {
-  static const clap_plugin_latency_t latencyExt = {
-      .get = [](const clap_plugin_t *p) -> uint32_t {
-        return static_cast<PluginWrapper *>(p->plugin_data)->impl.latency();
-      },
-  };
-  return &latencyExt;
-}
-if (strcmp(id, CLAP_EXT_TAIL) == 0) {
-  static const clap_plugin_tail_t tailExt = {
-      .get = [](const clap_plugin_t *p) -> uint32_t {
-        return static_cast<PluginWrapper *>(p->plugin_data)->impl.tail();
-      },
-  };
-  return &tailExt;
-}
-return nullptr;
+  if (strcmp(id, CLAP_EXT_LATENCY) == 0) {
+    static const clap_plugin_latency_t latencyExt = {
+        .get = [](const clap_plugin_t *p) -> uint32_t {
+          return static_cast<PluginWrapper *>(p->plugin_data)->impl.latency();
+        },
+    };
+    return &latencyExt;
+  }
+  if (strcmp(id, CLAP_EXT_TAIL) == 0) {
+    static const clap_plugin_tail_t tailExt = {
+        .get = [](const clap_plugin_t *p) -> uint32_t {
+          return static_cast<PluginWrapper *>(p->plugin_data)->impl.tail();
+        },
+    };
+    return &tailExt;
+  }
+  return nullptr;
 }
 
 // Factory create plugin
@@ -636,7 +637,7 @@ factory_create_plugin(const clap_plugin_factory_t *factory,
 }
 
 // The factory
-static const clap_plugin_factory_t pluginFactory = {
+const clap_plugin_factory_t pluginFactory = {
     .get_plugin_count = factory_get_plugin_count,
     .get_plugin_descriptor = factory_get_plugin_descriptor,
     .create_plugin = factory_create_plugin,

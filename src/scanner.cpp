@@ -185,11 +185,11 @@ Scanner::parseManifest(const std::string &jsonPath,
       }
       if (audio.hasObjectMember("latency")) {
         manifest.audio.latency =
-            static_cast<uint32_t>(audio["latency"].getInt64());
+            static_cast<uint32_t>(audio["latency"].get<double>());
       }
-      if (audio.hasObjectMember("tail")) {
+      if (audio.hasObjectMember("tailSize")) {
         manifest.audio.tailSize =
-            static_cast<uint32_t>(audio["tail"].getInt64());
+            static_cast<uint32_t>(audio["tailSize"].get<double>());
       }
     }
 
@@ -199,11 +199,11 @@ Scanner::parseManifest(const std::string &jsonPath,
       for (uint32_t i = 0; i < params.size(); ++i) {
         auto p = params[i];
         ParamInfo info;
-        info.id = static_cast<int32_t>(p["id"].getInt64());
+        info.id = static_cast<int32_t>(p["id"].get<int64_t>());
         info.name = p["name"].toString();
-        info.min = static_cast<float>(p["min"].getFloat64());
-        info.max = static_cast<float>(p["max"].getFloat64());
-        info.defaultValue = static_cast<float>(p["default"].getFloat64());
+        info.min = static_cast<float>(p["min"].get<double>());
+        info.max = static_cast<float>(p["max"].get<double>());
+        info.defaultValue = static_cast<float>(p["default"].get<double>());
         manifest.parameters.push_back(info);
       }
     }

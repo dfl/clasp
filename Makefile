@@ -116,6 +116,11 @@ else ifeq ($(PLATFORM),windows)
 endif
 	@echo "Package created in dist/"
 
+# Unit tests
+test: debug
+	@echo "==> Running tests..."
+	@cd $(BUILD_DIR) && ctest --output-on-failure
+
 # Help
 help:
 	@echo "CLASP Build System"
@@ -124,6 +129,7 @@ help:
 	@echo "  make              Build release for current platform"
 	@echo "  make release      Build optimized release"
 	@echo "  make debug        Build with debug symbols"
+	@echo "  make test         Build and run unit tests"
 	@echo "  make install      Install to standard CLAP folder"
 	@echo "  make package      Create distributable package"
 	@echo "  make clean        Remove build artifacts"

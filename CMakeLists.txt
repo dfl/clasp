@@ -139,3 +139,30 @@ if(CLASP_BUILD_EXAMPLES)
         configure_file(${MANIFEST} ${CMAKE_BINARY_DIR}/examples/${EXAMPLE_NAME}.clasp/plugin.json COPYONLY)
     endforeach()
 endif()
+
+# Testing
+option(CLASP_BUILD_TESTS "Build unit tests" ON)
+if(CLASP_BUILD_TESTS)
+    include(FetchContent)
+    FetchContent_Declare(
+      Catch2
+      GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+      GIT_TAG        v3.4.0
+    )
+    FetchContent_MakeAvailable(Catch2)
+
+    add_executable(clasp_tests 
+        tests/scanner_test.cpp
+        tests/runtime_test.cpp
+    )
+    target_link_libraries(clasp_tests PRIVATE 
+        clasp_core
+        Catch2::Catch2WithMain
+    )
+    
+    # Add project root for tests
+    target_compile_definitions(clasp_tests PRIVATE CLASP_PROJECT_ROOT="${CMAKE_CURRENT_SOURCE_DIR}")
+    
+    enable_testing()
+    add_test(NAME clasp_tests COMMAND clasp_tests)
+endif()
