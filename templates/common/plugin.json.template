@@ -1,0 +1,25 @@
+{
+  "name": "PLUGIN_NAME",
+  "vendor": "CLASP",
+  "version": "0.1.0",
+  "id": "com.clasp.PLUGIN_ID",
+  "isInstrument": false,
+  "audio": {
+    "inputs": 2,
+    "outputs": 2
+  },
+  "ui": {
+    "hasUi": true,
+    "width": 300,
+    "height": 300
+  },
+  "parameters": [
+    {
+      "id": 0,
+      "name": "Gain",
+      "min": 0.0,
+      "max": 2.0,
+      "default": 1.0
+    }
+  ]
+}

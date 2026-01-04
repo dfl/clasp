@@ -58,6 +58,7 @@ void dsp_set_state(const uint8_t* in);
 // Instruments only
 void dsp_note_on(int32_t offset, int16_t note_id, int16_t channel, int16_t key, float velocity);
 void dsp_note_off(int32_t offset, int16_t note_id, int16_t channel, int16_t key, float velocity);
+void dsp_note_expression(int32_t offset, int16_t note_id, int16_t channel, int16_t key, int32_t expression_id, float value);
 ```
 
 ## Build Commands
@@ -126,14 +127,15 @@ html, body {
 
 ## CLI Tools
 
-### clasp-precompile
-Pre-compiles all WASM plugins to warm up the AOT cache:
+### clasp-tool
+The unified CLI for CLASP development:
 
 ```bash
-./build/clasp-precompile
+./build/clasp-tool create "My Synth"   # Scaffolds a new plugin project
+./build/clasp-tool warm                 # Warms up the AOT cache
 ```
 
-This is useful after installing new plugins to avoid slow first-load.
+The `create` command generates a modern C++/WASM template with a responsive HTML/JS UI and MPE-ready DSP boilerplate.
 
 ## Version
 
@@ -155,7 +157,7 @@ No test suite yet. Manual testing:
 - **Improved MIDI Mapping**: Persistent storage for MIDI learned mappings.
 
 ### Medium Priority  
-- **Windows/Linux GUI embedding**: Add `gui_win32.cpp` and `gui_linux.cpp` for cross-platform WebView embedding.
+- **Wayland Native Support**: While discovery is implemented, raw surface management for Wayland subsurfaces needs a native Linux testbed.
 - **Preset management in GUI**: JavaScript API for saving/loading presets.
 - **Parameter groups**: Support for organizing parameters in the UI.
 

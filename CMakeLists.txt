@@ -125,9 +125,9 @@ install(TARGETS clasp
 )
 
 # CLI Tools
-add_executable(clasp-precompile tools/precompile.cpp)
-target_link_libraries(clasp-precompile PRIVATE clasp_core)
-# CLI tool is not installed - run from build directory: ./build/clasp-precompile
+add_executable(clasp-tool tools/clasp-tool.cpp)
+target_link_libraries(clasp-tool PRIVATE clasp_core)
+# CLI tool is not installed - run from build directory: ./build/clasp-tool
 
 # Examples (WASM plugins are built separately with wasi-sdk/cargo)
 if(CLASP_BUILD_EXAMPLES)

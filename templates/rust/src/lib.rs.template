@@ -1,0 +1,51 @@
+static mut SAMPLE_RATE: f32 = 44100.0;
+static mut GAIN: f32 = 1.0;
+
+const NUM_CHANNELS: usize = 2;
+const MAX_BLOCK_SIZE: usize = 4096;
+
+static mut INPUT_BUFFERS: [[f32; MAX_BLOCK_SIZE]; NUM_CHANNELS] = [[0.0; MAX_BLOCK_SIZE]; NUM_CHANNELS];
+static mut OUTPUT_BUFFERS: [[f32; MAX_BLOCK_SIZE]; NUM_CHANNELS] = [[0.0; MAX_BLOCK_SIZE]; NUM_CHANNELS];
+
+#[no_mangle]
+pub unsafe extern "C" fn dsp_init(sample_rate: f32, _max_block_size: i32) {
+    SAMPLE_RATE = sample_rate;
+    GAIN = 1.0;
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn dsp_process(block_size: i32) {
+    for ch in 0..NUM_CHANNELS {
+        for i in 0..block_size as usize {
+            OUTPUT_BUFFERS[ch][i] = INPUT_BUFFERS[ch][i] * GAIN;
+        }
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn dsp_set_param(id: i32, value: f32) {
+    if id == 0 { GAIN = value; }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn dsp_get_param(id: i32) -> f32 {
+    if id == 0 { GAIN } else { 0.0 }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn dsp_get_input_buffer(channel: i32) -> *mut f32 {
+    if channel >= 0 && (channel as usize) < NUM_CHANNELS {
+        INPUT_BUFFERS[channel as usize].as_mut_ptr()
+    } else {
+        std::ptr::null_mut()
+    }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn dsp_get_output_buffer(channel: i32) -> *mut f32 {
+    if channel >= 0 && (channel as usize) < NUM_CHANNELS {
+        OUTPUT_BUFFERS[channel as usize].as_mut_ptr()
+    } else {
+        std::ptr::null_mut()
+    }
+}

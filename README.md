@@ -32,6 +32,7 @@
 - **Fast**: Wasmtime JIT with SIMD support, AOT caching for instant reload
 - **Web UI**: Optional HTML/CSS/JS interface via embedded WebView
 - **Effects & Instruments**: Full support for audio effects and synthesizers
+- **MPE Support**: MIDI Polyphonic Expression support for expressive instruments
 
 ## Quick Start
 
@@ -99,6 +100,23 @@ clang++ --target=wasm32-wasi -O3 -msimd128 \
 ```
 
 5. Place your `.clasp` bundle in `~/.clasp/plugins/`
+
+### Generating a Plugin
+
+The easiest way to start is with the built-in `clasp-tool`:
+
+```bash
+# Create a new C++ plugin (default)
+./build/clasp-tool create "My Gain"
+
+# Create a Rust plugin
+./build/clasp-tool create --lang rust "Rust Synth"
+
+# Create an AssemblyScript plugin
+./build/clasp-tool create --lang as "Web FX"
+```
+
+This scaffolds a complete project structure with DSP boilerplate, a responsive UI, and build scripts.
 
 ### Building the Example Plugin
 
