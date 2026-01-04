@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0-beta] - 2026-01-04
+
+### Added
+- New `clasp-tool` CLI for plugin generation and cache management
+- Scaffolding support for multiple languages (C++, Rust, AssemblyScript)
+- Externalized project templates for better customization
+- MIDI Polyphonic Expression (MPE) and Note Expression support
+- Expanded DSP ABI with `dsp_note_expression`
+- Added comprehensive `CONTRIBUTING.md` and upgraded documentation
+- Improved build system integration for templates
+
 ## [0.1.0-alpha] - 2026-01-03
 
 ### Added

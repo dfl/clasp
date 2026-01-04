@@ -1,7 +1,7 @@
 # CLASP - CLAP WebAssembly Plugin Host
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-0.1.0-green.svg)](https://github.com/dflowenfels/clasp)
+[![Version](https://img.shields.io/badge/version-1.0.0--beta-green.svg)](https://github.com/dflowenfels/clasp)
 [![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey.svg)](https://github.com/dflowenfels/clasp)
 
 > **Native CLAP wrapper for WASM — ✨ Compile once, run everywhere!**
@@ -11,7 +11,7 @@
 ---
 
 ### 🚦 Development Status
-CLASP is currently in **Beta (0.1.0)**. We are actively implementing more CLAP extensions and improving cross-platform stability. Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md).
+CLASP is currently in **Beta (1.0.0-beta)**. We are actively implementing more CLAP extensions and improving cross-platform stability. Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
