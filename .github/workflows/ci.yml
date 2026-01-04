@@ -33,8 +33,14 @@ jobs:
 
       - name: Configure (Windows)
         if: runner.os == 'Windows'
-        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DCLASP_BUILD_TESTS=ON
 
-      - name: Verify output
+      - name: Build (Windows)
+        if: runner.os == 'Windows'
+        run: cmake --build build --config Release --parallel
+
+      - name: Run tests (Windows)
+        if: runner.os == 'Windows'
         run: |
-          ls -la build/clasp.clap* || ls -la build/Release/clasp.clap* || true
+          cd build
+          ctest --output-on-failure -C Release
