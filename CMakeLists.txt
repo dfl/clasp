@@ -106,10 +106,6 @@ install(TARGETS clasp
     BUNDLE DESTINATION "${CLAP_INSTALL_DIR}"
 )
 
-# CLI tool for cache warming
-add_executable(clasp-warm tools/clasp-warm.cpp)
-target_link_libraries(clasp-warm PRIVATE clasp_core)
-
 # Examples (WASM plugins are built separately with wasi-sdk/cargo)
 if(CLASP_BUILD_EXAMPLES)
     # Copy example plugin.json files to build directory for testing
