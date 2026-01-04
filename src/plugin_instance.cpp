@@ -139,6 +139,22 @@ void PluginInstance::processInputEvents(const clap_input_events_t *events) {
       break;
     }
 
+    case CLAP_EVENT_NOTE_EXPRESSION: {
+      if (manifest_.isInstrument && wasm_ && wasm_->hasInstrumentSupport()) {
+        auto exp =
+            reinterpret_cast<const clap_event_note_expression_t *>(event);
+        ExpressionEvent ee;
+        ee.sampleOffset = event->time;
+        ee.noteId = exp->note_id;
+        ee.channel = exp->channel;
+        ee.key = exp->key;
+        ee.expressionId = exp->expression_id;
+        ee.value = static_cast<float>(exp->value);
+        pendingExpressions_.push_back(ee);
+      }
+      break;
+    }
+
     default:
       break;
     }
@@ -210,6 +226,15 @@ clap_process_status PluginInstance::process(const clap_process_t *process) {
     wasm_->noteOff(note.sampleOffset, note.noteId, note.channel, note.key,
                    note.velocity);
   }
+  for (const auto &exp : pendingExpressions_) {
+    wasm_->noteExpression(exp.sampleOffset, exp.noteId, exp.channel, exp.key,
+                          exp.expressionId, exp.value);
+  }
+
+  // Clear queues
+  pendingNoteOns_.clear();
+  pendingNoteOffs_.clear();
+  pendingExpressions_.clear();
 
   // Copy input audio to WASM
   copyInputBuffers(process);

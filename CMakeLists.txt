@@ -44,6 +44,10 @@ if(APPLE)
     set_source_files_properties(src/gui_cocoa.mm PROPERTIES
         COMPILE_FLAGS "-fobjc-arc"
     )
+elseif(WIN32)
+    list(APPEND CLASP_CORE_SOURCES src/gui_win32.cpp)
+elseif(UNIX AND NOT APPLE)
+    list(APPEND CLASP_CORE_SOURCES src/gui_linux.cpp)
 endif()
 
 add_library(clasp_core STATIC ${CLASP_CORE_SOURCES})

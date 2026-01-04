@@ -68,7 +68,8 @@ bool Gui::isApiSupported(const char *api, bool isFloating) {
 #elif defined(_WIN32)
   return strcmp(api, CLAP_WINDOW_API_WIN32) == 0;
 #else
-  return strcmp(api, CLAP_WINDOW_API_X11) == 0;
+  return strcmp(api, CLAP_WINDOW_API_X11) == 0 ||
+         strcmp(api, CLAP_WINDOW_API_WAYLAND) == 0;
 #endif
 
 #else
@@ -83,7 +84,8 @@ bool Gui::getPreferredApi(const char **api, bool *isFloating) {
 #elif defined(_WIN32)
   *api = CLAP_WINDOW_API_WIN32;
 #else
-  *api = CLAP_WINDOW_API_X11;
+  // Prefer Wayland if available, otherwise X11
+  *api = CLAP_WINDOW_API_WAYLAND;
 #endif
   *isFloating = false;
   return true;

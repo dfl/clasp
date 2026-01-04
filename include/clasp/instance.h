@@ -19,6 +19,15 @@ struct NoteEvent {
   float velocity;
 };
 
+struct ExpressionEvent {
+  int32_t sampleOffset;
+  int16_t noteId;
+  int16_t channel;
+  int16_t key;
+  int32_t expressionId;
+  float value;
+};
+
 // Plugin instance wrapping a WASM DSP module
 class PluginInstance {
 public:
@@ -49,6 +58,8 @@ public:
   const PluginManifest &manifest() const { return manifest_; }
   bool isInstrument() const { return manifest_.isInstrument; }
   bool hasUi() const { return manifest_.ui.hasUi; }
+  uint32_t latency() const { return manifest_.audio.latency; }
+  uint32_t tail() const { return manifest_.audio.tailSize; }
 
 private:
   PluginManifest manifest_;
@@ -68,6 +79,7 @@ private:
   // Note events queue (for instruments)
   std::vector<NoteEvent> pendingNoteOns_;
   std::vector<NoteEvent> pendingNoteOffs_;
+  std::vector<ExpressionEvent> pendingExpressions_;
 
   // Process input events from host
   void processInputEvents(const clap_input_events_t *events);
