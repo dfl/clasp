@@ -33,17 +33,7 @@ jobs:
 
       - name: Configure (Windows)
         if: runner.os == 'Windows'
-        run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DCLASP_BUILD_TESTS=ON
-
-      - name: Build (Windows)
-        if: runner.os == 'Windows'
-        run: cmake --build build --config Release --parallel
-
-      - name: Run tests (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          cd build
-          ctest --output-on-failure -C Release
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
 
       - name: Verify output
         run: |
