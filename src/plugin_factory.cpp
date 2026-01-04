@@ -599,6 +599,8 @@ const void *PluginWrapper::getExtension(const clap_plugin_t *p,
     return &audioPortsExtension;
   if (strcmp(id, CLAP_EXT_NOTE_PORTS) == 0)
     return &notePortsExtension;
+  if (strcmp(id, CLAP_EXT_GUI) == 0)
+    return &guiExtension;
   if (strcmp(id, CLAP_EXT_LATENCY) == 0) {
     static const clap_plugin_latency_t latencyExt = {
         .get = [](const clap_plugin_t *p) -> uint32_t {
