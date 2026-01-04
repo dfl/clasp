@@ -27,7 +27,8 @@ export async function create(name: string, options: CreateOptions) {
   try {
     // Find templates directory (relative to package root)
     const packageRoot = path.resolve(__dirname, '..', '..', '..');
-    const templatesDir = path.resolve(packageRoot, '..', '..', 'templates', 'gain');
+    const templateName = options.type === 'instrument' ? 'synth' : 'gain';
+    const templatesDir = path.resolve(packageRoot, '..', '..', 'templates', templateName);
 
     if (!await fs.pathExists(templatesDir)) {
       throw new Error(`Templates not found at ${templatesDir}`);

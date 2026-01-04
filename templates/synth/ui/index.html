@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{PLUGIN_NAME}}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .plugin {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 24px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .header h1 { font-size: 24px; font-weight: 600; }
+        .header .vendor { font-size: 12px; color: #888; }
+
+        .section {
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #888;
+            margin-bottom: 12px;
+        }
+
+        /* ADSR */
+        .adsr {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+
+        .knob-group {
+            text-align: center;
+        }
+
+        .knob-group label {
+            display: block;
+            font-size: 11px;
+            margin-bottom: 8px;
+            color: #aaa;
+        }
+
+        .knob {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto;
+            border-radius: 50%;
+            background: linear-gradient(145deg, #2a2a4a, #1a1a2e);
+            box-shadow: 4px 4px 12px rgba(0,0,0,0.4), -2px -2px 8px rgba(255,255,255,0.05);
+            position: relative;
+            cursor: pointer;
+        }
+
+        .knob::after {
+            content: '';
+            position: absolute;
+            width: 3px;
+            height: 18px;
+            background: #4fc3f7;
+            border-radius: 2px;
+            top: 6px;
+            left: 50%;
+            transform-origin: bottom center;
+            transform: translateX(-50%) rotate(var(--rotation, 0deg));
+        }
+
+        .knob-value {
+            font-size: 11px;
+            color: #4fc3f7;
+            margin-top: 8px;
+        }
+
+        /* Filter */
+        .filter-section {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .filter-section label { font-size: 12px; }
+
+        .slider {
+            flex: 1;
+            height: 6px;
+            border-radius: 3px;
+            background: #2a2a4a;
+            -webkit-appearance: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #4fc3f7;
+            cursor: pointer;
+        }
+
+        /* Keyboard */
+        .keyboard {
+            display: flex;
+            justify-content: center;
+            height: 120px;
+            position: relative;
+        }
+
+        .white-key {
+            width: 36px;
+            height: 120px;
+            background: linear-gradient(180deg, #f0f0f0 0%, #d0d0d0 100%);
+            border: 1px solid #999;
+            border-radius: 0 0 4px 4px;
+            cursor: pointer;
+            position: relative;
+            z-index: 1;
+        }
+
+        .white-key:hover { background: #e8e8e8; }
+        .white-key.active { background: #4fc3f7; }
+
+        .black-key {
+            width: 24px;
+            height: 75px;
+            background: linear-gradient(180deg, #333 0%, #111 100%);
+            border-radius: 0 0 3px 3px;
+            cursor: pointer;
+            position: absolute;
+            z-index: 2;
+            margin-left: -12px;
+        }
+
+        .black-key:hover { background: #444; }
+        .black-key.active { background: #0097a7; }
+
+        .key-wrapper {
+            display: flex;
+            position: relative;
+        }
+    </style>
+</head>
+<body>
+    <div class="plugin">
+        <div class="header">
+            <h1>{{PLUGIN_NAME}}</h1>
+            <div class="vendor">{{PLUGIN_VENDOR}}</div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Envelope</div>
+            <div class="adsr">
+                <div class="knob-group">
+                    <label>Attack</label>
+                    <div class="knob" data-param="0" data-min="0.001" data-max="2"></div>
+                    <div class="knob-value" id="val-0">10 ms</div>
+                </div>
+                <div class="knob-group">
+                    <label>Decay</label>
+                    <div class="knob" data-param="1" data-min="0.001" data-max="2"></div>
+                    <div class="knob-value" id="val-1">100 ms</div>
+                </div>
+                <div class="knob-group">
+                    <label>Sustain</label>
+                    <div class="knob" data-param="2" data-min="0" data-max="1"></div>
+                    <div class="knob-value" id="val-2">70%</div>
+                </div>
+                <div class="knob-group">
+                    <label>Release</label>
+                    <div class="knob" data-param="3" data-min="0.001" data-max="2"></div>
+                    <div class="knob-value" id="val-3">300 ms</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Filter</div>
+            <div class="filter-section">
+                <label>Cutoff</label>
+                <input type="range" class="slider" id="cutoff" min="0.01" max="1" step="0.01" value="1">
+                <span id="val-4">100%</span>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Keyboard</div>
+            <div class="keyboard" id="keyboard"></div>
+        </div>
+    </div>
+
+    <script src="clasp.js"></script>
+    <script>
+        // Parameter state
+        const params = {
+            0: 0.01,  // Attack
+            1: 0.1,   // Decay
+            2: 0.7,   // Sustain
+            3: 0.3,   // Release
+            4: 1.0    // Cutoff
+        };
+
+        // Format value for display
+        function formatValue(id, value) {
+            if (id === 2 || id === 4) return Math.round(value * 100) + '%';
+            return Math.round(value * 1000) + ' ms';
+        }
+
+        // Update knob rotation (-135 to 135 degrees)
+        function updateKnob(knob, value) {
+            const min = parseFloat(knob.dataset.min);
+            const max = parseFloat(knob.dataset.max);
+            const normalized = (value - min) / (max - min);
+            const rotation = normalized * 270 - 135;
+            knob.style.setProperty('--rotation', `${rotation}deg`);
+        }
+
+        // Initialize knobs
+        document.querySelectorAll('.knob').forEach(knob => {
+            const paramId = parseInt(knob.dataset.param);
+            updateKnob(knob, params[paramId]);
+
+            let dragging = false;
+            let startY, startValue;
+
+            knob.addEventListener('mousedown', (e) => {
+                dragging = true;
+                startY = e.clientY;
+                startValue = params[paramId];
+                document.body.style.cursor = 'ns-resize';
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!dragging) return;
+                const min = parseFloat(knob.dataset.min);
+                const max = parseFloat(knob.dataset.max);
+                const delta = (startY - e.clientY) / 100 * (max - min);
+                const newValue = Math.max(min, Math.min(max, startValue + delta));
+                params[paramId] = newValue;
+                updateKnob(knob, newValue);
+                document.getElementById(`val-${paramId}`).textContent = formatValue(paramId, newValue);
+                clasp.call('setParam', paramId, newValue);
+            });
+
+            document.addEventListener('mouseup', () => {
+                dragging = false;
+                document.body.style.cursor = '';
+            });
+        });
+
+        // Cutoff slider
+        const cutoffSlider = document.getElementById('cutoff');
+        cutoffSlider.addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value);
+            params[4] = value;
+            document.getElementById('val-4').textContent = formatValue(4, value);
+            clasp.call('setParam', 4, value);
+        });
+
+        // Build keyboard (2 octaves starting at C3 = MIDI 48)
+        const keyboard = document.getElementById('keyboard');
+        const baseNote = 48;
+        const whiteNotes = [0, 2, 4, 5, 7, 9, 11, 12, 14, 16, 17, 19, 21, 23, 24];
+        const blackNotes = [1, 3, 6, 8, 10, 13, 15, 18, 20, 22];
+        const blackPositions = [1, 2, 4, 5, 6, 8, 9, 11, 12, 13]; // After which white key
+
+        // White keys
+        whiteNotes.forEach((offset, i) => {
+            const key = document.createElement('div');
+            key.className = 'white-key';
+            key.dataset.note = baseNote + offset;
+            keyboard.appendChild(key);
+        });
+
+        // Black keys (positioned absolutely)
+        blackNotes.forEach((offset, i) => {
+            const key = document.createElement('div');
+            key.className = 'black-key';
+            key.dataset.note = baseNote + offset;
+            key.style.left = `${blackPositions[i] * 36 - 12}px`;
+            keyboard.appendChild(key);
+        });
+
+        // Keyboard interaction
+        const activeNotes = new Set();
+
+        function noteOn(note) {
+            if (activeNotes.has(note)) return;
+            activeNotes.add(note);
+            clasp.call('noteOn', 0, note, 0.8);
+            const key = keyboard.querySelector(`[data-note="${note}"]`);
+            if (key) key.classList.add('active');
+        }
+
+        function noteOff(note) {
+            if (!activeNotes.has(note)) return;
+            activeNotes.delete(note);
+            clasp.call('noteOff', 0, note);
+            const key = keyboard.querySelector(`[data-note="${note}"]`);
+            if (key) key.classList.remove('active');
+        }
+
+        keyboard.addEventListener('mousedown', (e) => {
+            if (e.target.dataset.note) {
+                noteOn(parseInt(e.target.dataset.note));
+            }
+        });
+
+        keyboard.addEventListener('mouseup', (e) => {
+            if (e.target.dataset.note) {
+                noteOff(parseInt(e.target.dataset.note));
+            }
+        });
+
+        keyboard.addEventListener('mouseleave', () => {
+            activeNotes.forEach(note => noteOff(note));
+        });
+
+        // Computer keyboard
+        const keyMap = {
+            'a': 48, 'w': 49, 's': 50, 'e': 51, 'd': 52, 'f': 53,
+            't': 54, 'g': 55, 'y': 56, 'h': 57, 'u': 58, 'j': 59,
+            'k': 60, 'o': 61, 'l': 62, 'p': 63, ';': 64
+        };
+
+        document.addEventListener('keydown', (e) => {
+            if (e.repeat) return;
+            const note = keyMap[e.key.toLowerCase()];
+            if (note) noteOn(note);
+        });
+
+        document.addEventListener('keyup', (e) => {
+            const note = keyMap[e.key.toLowerCase()];
+            if (note) noteOff(note);
+        });
+
+        // Receive param updates from host
+        clasp.on('paramChange', (id, value) => {
+            params[id] = value;
+            const knob = document.querySelector(`.knob[data-param="${id}"]`);
+            if (knob) updateKnob(knob, value);
+            if (id === 4) cutoffSlider.value = value;
+            document.getElementById(`val-${id}`).textContent = formatValue(id, value);
+        });
+    </script>
+</body>
+</html>
