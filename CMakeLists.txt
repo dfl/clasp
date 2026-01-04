@@ -76,6 +76,11 @@ add_library(thunder MODULE
 
 target_link_libraries(thunder PRIVATE clasp_core)
 
+# Suppress GCC warnings from wclap-cpp headers
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(thunder PRIVATE -Wno-changes-meaning)
+endif()
+
 # Set plugin output properties
 set_target_properties(thunder PROPERTIES
     PREFIX ""
