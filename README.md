@@ -1,8 +1,8 @@
 # CLASP - CLAP WebAssembly Plugin Host
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-1.0.0--beta-green.svg)](https://github.com/dflowenfels/clasp)
-[![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey.svg)](https://github.com/dflowenfels/clasp)
+[![Version](https://img.shields.io/badge/version-1.0.0--beta-green.svg)](https://github.com/dfl/clasp)
+[![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey.svg)](https://github.com/dfl/clasp)
 
 > **Native CLAP wrapper for WASM — ✨ Compile once, run everywhere!**
 
@@ -19,7 +19,7 @@ We're currently in **1.0.0-beta**. I'm actively expanding support for more CLAP 
 
 For most users, I recommend downloading the pre-built binaries for your platform. 
 
-**[Get the latest CLASP release here](https://github.com/dflowenfels/clasp/releases)**
+**[Get the latest CLASP release here](https://github.com/dfl/clasp/releases)**
 
 1.  **Download** the `.zip` or `.tar.gz` for your operating system.
 2.  **Extract** the `clasp.clap` bundle and `clasp-tool`.
@@ -70,12 +70,12 @@ I've always been frustrated by the friction of cross-platform audio development.
 
 You need the `clasp.clap` host to run your plugins. You can either:
 
-*   **Download pre-built**: Grab the latest from [Releases](https://github.com/dflowenfels/clasp/releases).
+*   **Download pre-built**: Grab the latest from [Releases](https://github.com/dfl/clasp/releases).
 *   **Build from source** (Requires CMake and a C++ compiler):
 
 ```bash
 # Clone with submodules
-git clone --recursive https://github.com/dflowenfels/clasp.git
+git clone --recursive https://github.com/dfl/clasp.git
 cd clasp
 
 # Build and install to your CLAP plugins folder

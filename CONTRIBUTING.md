@@ -5,7 +5,7 @@ Thank you for your interest in contributing to CLASP! We welcome all contributio
 ## 🚀 How to Contribute
 
 ### Reporting Bugs
-- Use the [GitHub Issue Tracker](https://github.com/dflowenfels/clasp/issues).
+- Use the [GitHub Issue Tracker](https://github.com/dfl/clasp/issues).
 - Provide a clear and descriptive title.
 - Include steps to reproduce the issue, your environment (OS, DAW, CLASP version), and any relevant logs or screenshots.
 
@@ -27,7 +27,7 @@ CLASP is built using CMake and requires a C++17 compiler.
 
 ```bash
 # Clone with submodules
-git clone --recursive https://github.com/dflowenfels/clasp.git
+git clone --recursive https://github.com/dfl/clasp.git
 cd clasp
 
 # Build in debug mode
