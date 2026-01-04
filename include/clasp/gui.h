@@ -10,13 +10,13 @@
 
 namespace clasp {
 
-// Forward declare the plugin instance
-class PluginInstance;
+// Forward declare the plugin instance interface
+class IPluginInstance;
 
 // GUI wrapper using clasp-gui WebView
 class Gui {
 public:
-  Gui(PluginInstance *plugin, const PluginManifest &manifest);
+  Gui(IPluginInstance *plugin, const PluginManifest &manifest);
   ~Gui();
 
   // CLAP GUI extension interface
@@ -60,7 +60,7 @@ public:
   void setParamChangeCallback(ParamChangeCallback callback);
 
 private:
-  PluginInstance *plugin_;
+  IPluginInstance *plugin_;
   PluginManifest manifest_;
 
   // clasp-gui WebView and Protocol

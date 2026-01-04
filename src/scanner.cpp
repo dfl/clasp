@@ -100,8 +100,7 @@ void Scanner::initDefaultPaths() {
   cacheDir_ = getDefaultCacheDir();
 
   // Default search paths:
-  // 1. User directory: ~/.clasp/plugins/ (legacy) and ~/.wclap/plugins/
-  searchPaths_.push_back(expandPath("~/.clasp/plugins"));
+  // 1. User directory: ~/.wclap/plugins/
   searchPaths_.push_back(expandPath("~/.wclap/plugins"));
 
   // 2. Check CLASP_PLUGIN_PATH environment variable
@@ -185,8 +184,8 @@ std::vector<PluginManifest> Scanner::scanDirectory(const std::string &path) {
     if (entry.is_directory()) {
       std::string dirName = entry.path().filename().string();
 
-      // Check if it's a .clasp or .wclap bundle
-      if (hasExtension(dirName, ".clasp") || hasExtension(dirName, ".wclap")) {
+      // Check if it's a .wclap bundle
+      if (hasExtension(dirName, ".wclap")) {
         auto manifest = loadManifest(entry.path().string());
         if (manifest) {
           result.push_back(std::move(*manifest));
@@ -200,10 +199,7 @@ std::vector<PluginManifest> Scanner::scanDirectory(const std::string &path) {
 
 std::optional<PluginManifest>
 Scanner::loadManifest(const std::string &bundlePath) {
-  // Detect bundle type based on contents
   std::string moduleWasm = bundlePath + "/module.wasm";
-  std::string dspWasm = bundlePath + "/dsp.wasm";
-  std::string jsonPath = bundlePath + "/plugin.json";
 
   // .wclap bundle: has module.wasm (standard WCLAP format)
   if (fs::exists(moduleWasm)) {
@@ -214,130 +210,13 @@ Scanner::loadManifest(const std::string &bundlePath) {
     }
     // TODO: queryWclapMetadata requires runtime integration
     // For now, just log and skip
-    std::cerr << "[clasp] WCLAP bundle needs metadata cache: " << bundlePath
+    std::cerr << "[thunder] WCLAP bundle needs metadata cache: " << bundlePath
               << std::endl;
     return std::nullopt;
   }
 
-  // .clasp bundle: has plugin.json + dsp.wasm (legacy format)
-  if (fs::exists(jsonPath) && fs::exists(dspWasm)) {
-    return parseClaspManifest(jsonPath, bundlePath);
-  }
-
-  std::cerr << "[clasp] Unknown bundle format: " << bundlePath << std::endl;
+  std::cerr << "[thunder] Invalid bundle (missing module.wasm): " << bundlePath << std::endl;
   return std::nullopt;
-}
-
-std::optional<PluginManifest>
-Scanner::parseClaspManifest(const std::string &jsonPath,
-                            const std::string &bundlePath) {
-  // Read JSON file
-  std::ifstream file(jsonPath);
-  if (!file) {
-    std::cerr << "[clasp] Failed to open: " << jsonPath << std::endl;
-    return std::nullopt;
-  }
-
-  std::string jsonStr((std::istreambuf_iterator<char>(file)),
-                      std::istreambuf_iterator<char>());
-
-  // Parse JSON using CHOC
-  try {
-    auto json = choc::json::parse(jsonStr);
-
-    PluginManifest manifest;
-    manifest.bundlePath = bundlePath;
-    manifest.wasmPath = bundlePath + "/dsp.wasm";
-    manifest.bundleType = BundleType::Clasp;
-
-    // Check if WASM file exists
-    if (!fs::exists(manifest.wasmPath)) {
-      std::cerr << "[clasp] Missing dsp.wasm in: " << bundlePath << std::endl;
-      return std::nullopt;
-    }
-
-    // Required fields
-    if (!json.hasObjectMember("id") || !json.hasObjectMember("name") ||
-        !json.hasObjectMember("vendor") || !json.hasObjectMember("version")) {
-      std::cerr << "[clasp] Missing required fields in: " << jsonPath
-                << std::endl;
-      return std::nullopt;
-    }
-
-    manifest.id = json["id"].toString();
-    manifest.name = json["name"].toString();
-    manifest.vendor = json["vendor"].toString();
-    manifest.version = json["version"].toString();
-
-    // Plugin type
-    if (json.hasObjectMember("type")) {
-      std::string type = json["type"].toString();
-      manifest.isInstrument = (type == "instrument" || type == "synth");
-    }
-
-    // Audio configuration
-    if (json.hasObjectMember("audio")) {
-      auto audio = json["audio"];
-      if (audio.hasObjectMember("inputs")) {
-        manifest.audio.inputs = static_cast<int>(audio["inputs"].getInt64());
-      }
-      if (audio.hasObjectMember("outputs")) {
-        manifest.audio.outputs = static_cast<int>(audio["outputs"].getInt64());
-      }
-      if (audio.hasObjectMember("latency")) {
-        manifest.audio.latency =
-            static_cast<uint32_t>(audio["latency"].get<double>());
-      }
-      if (audio.hasObjectMember("tailSize")) {
-        manifest.audio.tailSize =
-            static_cast<uint32_t>(audio["tailSize"].get<double>());
-      }
-    }
-
-    // Parameters
-    if (json.hasObjectMember("parameters") && json["parameters"].isArray()) {
-      auto params = json["parameters"];
-      for (uint32_t i = 0; i < params.size(); ++i) {
-        auto p = params[i];
-        ParamInfo info;
-        info.id = static_cast<int32_t>(p["id"].get<int64_t>());
-        info.name = p["name"].toString();
-        info.min = static_cast<float>(p["min"].get<double>());
-        info.max = static_cast<float>(p["max"].get<double>());
-        info.defaultValue = static_cast<float>(p["default"].get<double>());
-        manifest.parameters.push_back(info);
-      }
-    }
-
-    // UI configuration
-    if (json.hasObjectMember("ui")) {
-      auto ui = json["ui"];
-      manifest.ui.hasUi = true;
-
-      if (ui.hasObjectMember("entry")) {
-        manifest.ui.entry = bundlePath + "/" + ui["entry"].toString();
-      } else {
-        manifest.ui.entry = bundlePath + "/ui/index.html";
-      }
-
-      if (ui.hasObjectMember("width")) {
-        manifest.ui.width = static_cast<int>(ui["width"].getInt64());
-      }
-      if (ui.hasObjectMember("height")) {
-        manifest.ui.height = static_cast<int>(ui["height"].getInt64());
-      }
-    }
-
-    std::cerr << "[clasp] Loaded CLASP plugin: " << manifest.name << " ("
-              << manifest.id << ")" << std::endl;
-
-    return manifest;
-
-  } catch (const std::exception &e) {
-    std::cerr << "[clasp] JSON parse error in " << jsonPath << ": " << e.what()
-              << std::endl;
-    return std::nullopt;
-  }
 }
 
 // Metadata caching for WCLAP bundles
@@ -412,13 +291,13 @@ Scanner::loadWclapCached(const std::string &bundlePath) {
       manifest.audio.outputs = static_cast<int>(audio["outputs"].getInt64());
     }
 
-    std::cerr << "[clasp] Loaded WCLAP plugin (cached): " << manifest.name
+    std::cerr << "[thunder] Loaded WCLAP plugin (cached): " << manifest.name
               << " (" << manifest.id << ")" << std::endl;
 
     return manifest;
 
   } catch (const std::exception &e) {
-    std::cerr << "[clasp] Cache parse error: " << e.what() << std::endl;
+    std::cerr << "[thunder] Cache parse error: " << e.what() << std::endl;
     return std::nullopt;
   }
 }

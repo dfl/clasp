@@ -14,7 +14,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # Options
-option(CLASP_BUILD_EXAMPLES "Build example WASM plugins" ON)
 
 # Include our cmake modules
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
@@ -39,7 +38,6 @@ add_subdirectory(extern/clasp-gui EXCLUDE_FROM_ALL)
 
 # clasp library (shared code)
 set(CLASP_CORE_SOURCES
-    src/runtime.cpp
     src/wclap_runtime.cpp
     src/scanner.cpp
     src/params.cpp
@@ -63,30 +61,31 @@ target_link_libraries(clasp_core PUBLIC
     ${WASMTIME_LIBRARIES}
 )
 
-# clasp.clap plugin
-add_library(clasp MODULE
+# thunder.clap plugin (dev-oriented WCLAP host with hot-reload)
+add_library(thunder MODULE
     src/plugin_entry.cpp
     src/plugin_factory.cpp
     src/plugin_instance.cpp
 )
 
-target_link_libraries(clasp PRIVATE clasp_core)
+target_link_libraries(thunder PRIVATE clasp_core)
 
 # Set plugin output properties
-set_target_properties(clasp PROPERTIES
+set_target_properties(thunder PROPERTIES
     PREFIX ""
     SUFFIX ".clap"
+    OUTPUT_NAME "thunder"
     BUNDLE TRUE
     BUNDLE_EXTENSION "clap"
-    MACOSX_BUNDLE_GUI_IDENTIFIER "com.clasp.wrapper"
-    MACOSX_BUNDLE_BUNDLE_NAME "clasp"
+    MACOSX_BUNDLE_GUI_IDENTIFIER "com.clasp.thunder"
+    MACOSX_BUNDLE_BUNDLE_NAME "thunder"
     MACOSX_BUNDLE_BUNDLE_VERSION "${PROJECT_VERSION}"
     MACOSX_BUNDLE_SHORT_VERSION_STRING "${PROJECT_VERSION}"
 )
 
 # macOS: Build as proper bundle
 if(APPLE)
-    set_target_properties(clasp PROPERTIES
+    set_target_properties(thunder PROPERTIES
         MACOSX_BUNDLE TRUE
         XCODE_ATTRIBUTE_GENERATE_INFOPLIST_FILE YES
     )
@@ -101,21 +100,13 @@ else()
     set(CLAP_INSTALL_DIR "$ENV{HOME}/.clap")
 endif()
 
-install(TARGETS clasp
+install(TARGETS thunder
     LIBRARY DESTINATION "${CLAP_INSTALL_DIR}"
     BUNDLE DESTINATION "${CLAP_INSTALL_DIR}"
 )
 
-# Examples (WASM plugins are built separately with wasi-sdk/cargo)
-if(CLASP_BUILD_EXAMPLES)
-    # Copy example plugin.json files to build directory for testing
-    file(GLOB EXAMPLE_MANIFESTS "examples/*/plugin.json")
-    foreach(MANIFEST ${EXAMPLE_MANIFESTS})
-        get_filename_component(EXAMPLE_DIR ${MANIFEST} DIRECTORY)
-        get_filename_component(EXAMPLE_NAME ${EXAMPLE_DIR} NAME)
-        configure_file(${MANIFEST} ${CMAKE_BINARY_DIR}/examples/${EXAMPLE_NAME}.clasp/plugin.json COPYONLY)
-    endforeach()
-endif()
+# Examples (WCLAP plugins are built separately with wasi-sdk/cargo)
+# See templates/ for WCLAP project templates
 
 # Testing
 option(CLASP_BUILD_TESTS "Build unit tests" OFF)
@@ -130,7 +121,6 @@ if(CLASP_BUILD_TESTS)
 
     add_executable(clasp_tests
         tests/scanner_test.cpp
-        tests/runtime_test.cpp
     )
     target_link_libraries(clasp_tests PRIVATE
         clasp_core

@@ -1,6 +1,6 @@
 #include <clap/clap.h>
 #include "clasp/scanner.h"
-#include "clasp/runtime.h"
+#include "clasp/wclap_runtime.h"
 #include <string>
 #include <vector>
 #include <cstring>
@@ -15,7 +15,7 @@ namespace clasp {
 // Plugin path (set during init)
 static std::string g_pluginPath;
 
-static bool clasp_init(const char* pluginPath) {
+static bool thunder_init(const char* pluginPath) {
     g_pluginPath = pluginPath ? pluginPath : "";
 
     // Add the plugin's sibling directory to search paths
@@ -26,25 +26,23 @@ static bool clasp_init(const char* pluginPath) {
         if (lastSlash != std::string::npos) {
             dir = dir.substr(0, lastSlash);
 
-            // Look for .clasp bundles in the same directory
+            // Look for .wclap bundles in the same directory
             clasp::getGlobalScanner().addSearchPath(dir);
         }
     }
 
-    // Initialize the Wasmtime runtime
-    auto& runtime = clasp::Runtime::instance();
-    if (runtime.engine() == nullptr) {
-        return false;
-    }
+    // Initialize the WclapRuntime (Wasmtime engine)
+    auto& runtime = clasp::WclapRuntime::instance();
+    (void)runtime; // Initialization happens in constructor
 
     return true;
 }
 
-static void clasp_deinit() {
+static void thunder_deinit() {
     // Runtime cleanup happens automatically via singleton destructor
 }
 
-static const void* clasp_get_factory(const char* factoryId) {
+static const void* thunder_get_factory(const char* factoryId) {
     if (strcmp(factoryId, CLAP_PLUGIN_FACTORY_ID) == 0) {
         return getPluginFactory();
     }
@@ -54,7 +52,7 @@ static const void* clasp_get_factory(const char* factoryId) {
 // The plugin entry point
 extern "C" CLAP_EXPORT const clap_plugin_entry_t clap_entry = {
     .clap_version = CLAP_VERSION,
-    .init = clasp_init,
-    .deinit = clasp_deinit,
-    .get_factory = clasp_get_factory,
+    .init = thunder_init,
+    .deinit = thunder_deinit,
+    .get_factory = thunder_get_factory,
 };

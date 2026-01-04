@@ -9,7 +9,6 @@ namespace clasp {
 
 // Bundle format types
 enum class BundleType {
-  Clasp, // Legacy .clasp bundles with plugin.json + dsp.wasm
   Wclap  // Standard .wclap bundles with module.wasm (CLAP compiled to WASM)
 };
 
@@ -54,10 +53,10 @@ struct PluginManifest {
   std::string wasmPath;
 
   // Bundle type
-  BundleType bundleType = BundleType::Clasp;
+  BundleType bundleType = BundleType::Wclap;
 };
 
-// Scanner for discovering .clasp and .wclap bundles
+// Scanner for discovering .wclap bundles
 class Scanner {
 public:
   Scanner();
@@ -88,10 +87,6 @@ private:
 
   // Initialize default search paths
   void initDefaultPaths();
-
-  // Parse plugin.json (for .clasp bundles)
-  std::optional<PluginManifest> parseClaspManifest(const std::string &jsonPath,
-                                                   const std::string &bundlePath);
 
   // Load/save WCLAP metadata from cache
   std::optional<PluginManifest> loadWclapCached(const std::string &bundlePath);

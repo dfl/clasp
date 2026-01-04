@@ -25,12 +25,12 @@ Scanner &getGlobalScanner() { return g_scanner; }
 
 // Helper to append suffix to plugin name
 static std::string formatPluginName(const std::string &name) {
-  return name + " (clasp)";
+  return name + " (thunder)";
 }
 
 // Helper to generate stable plugin ID
 static std::string formatPluginId(const std::string &id) {
-  return "clasp:" + id;
+  return "thunder:" + id;
 }
 
 // Scan for plugins if not already done
@@ -58,7 +58,7 @@ static void ensureScanned() {
     desc.vendor = persistentStrings[persistentStrings.size() - 2].c_str();
     desc.version = persistentStrings[persistentStrings.size() - 1].c_str();
 
-    desc.description = "WASM DSP plugin hosted by clasp";
+    desc.description = "WCLAP plugin hosted by thunder";
     desc.url = "";
     desc.manual_url = "";
     desc.support_url = "";
@@ -95,13 +95,14 @@ factory_get_plugin_descriptor(const clap_plugin_factory_t *factory,
 }
 
 // Forward declare the plugin wrapper class
-class ClaspPlugin;
+class ThunderPlugin;
 
 // Plugin wrapper that implements CLAP interface
-class ClaspPlugin {
+class ThunderPlugin {
 public:
-  ClaspPlugin(const clap_host_t *host, const PluginManifest &manifest)
-      : host_(host), manifest_(manifest), instance_(manifest) {
+  ThunderPlugin(const clap_host_t *host, const PluginManifest &manifest)
+      : host_(host), manifest_(manifest) {
+    instance_ = createPluginInstance(manifest);
     // Cache host params extension for notifying parameter changes
     if (host_) {
       hostParams_ = static_cast<const clap_host_params_t *>(
@@ -110,18 +111,18 @@ public:
   }
 
   // CLAP plugin interface
-  bool init() { return instance_.init(); }
-  void destroy() { instance_.destroy(); }
+  bool init() { return instance_ && instance_->init(); }
+  void destroy() { if (instance_) instance_->destroy(); }
 
   bool activate(double sampleRate, uint32_t minFrames, uint32_t maxFrames) {
-    return instance_.activate(sampleRate, minFrames, maxFrames);
+    return instance_ && instance_->activate(sampleRate, minFrames, maxFrames);
   }
 
-  void deactivate() { instance_.deactivate(); }
+  void deactivate() { if (instance_) instance_->deactivate(); }
 
-  bool startProcessing() { return instance_.startProcessing(); }
-  void stopProcessing() { instance_.stopProcessing(); }
-  void reset() { instance_.reset(); }
+  bool startProcessing() { return instance_ && instance_->startProcessing(); }
+  void stopProcessing() { if (instance_) instance_->stopProcessing(); }
+  void reset() { if (instance_) instance_->reset(); }
 
   clap_process_status process(const clap_process_t *process) {
     bool guiUpdateQueued = false;
@@ -156,7 +157,8 @@ public:
       }
     }
 
-    auto status = instance_.process(process);
+    if (!instance_) return CLAP_PROCESS_ERROR;
+    auto status = instance_->process(process);
 
     if (guiUpdateQueued && host_) {
       host_->request_callback(host_);
@@ -189,7 +191,8 @@ public:
   }
 
   bool paramsGetValue(clap_id paramId, double *value) const {
-    *value = instance_.getParameterValue(paramId);
+    if (!instance_) return false;
+    *value = instance_->getParameterValue(paramId);
     return true;
   }
 
@@ -211,7 +214,7 @@ public:
       auto event = in->get(in, i);
       if (event->type == CLAP_EVENT_PARAM_VALUE) {
         auto pv = reinterpret_cast<const clap_event_param_value_t *>(event);
-        instance_.setParameterValue(pv->param_id, pv->value);
+        if (instance_) instance_->setParameterValue(pv->param_id, pv->value);
 
         // Queue GUI update (thread-safe, will be processed on main thread)
         if (gui_) {
@@ -227,16 +230,17 @@ public:
 
   // State extension
   bool stateSave(const clap_ostream_t *stream) {
-    return instance_.saveState(stream);
+    return instance_ && instance_->saveState(stream);
   }
 
   bool stateLoad(const clap_istream_t *stream) {
-    bool result = instance_.loadState(stream);
+    if (!instance_) return false;
+    bool result = instance_->loadState(stream);
 
     // Notify GUI of all parameter values after loading state
     if (result && gui_) {
       for (const auto &param : manifest_.parameters) {
-        float value = static_cast<float>(instance_.getParameterValue(param.id));
+        float value = static_cast<float>(instance_->getParameterValue(param.id));
         gui_->notifyParameterChanged(param.id, value);
       }
     }
@@ -297,7 +301,7 @@ public:
     if (!manifest_.ui.hasUi)
       return false;
     if (!gui_) {
-      gui_ = std::make_unique<Gui>(&instance_, manifest_);
+      gui_ = std::make_unique<Gui>(instance_.get(), manifest_);
     }
     return gui_->isApiSupported(api, isFloating);
   }
@@ -309,7 +313,7 @@ public:
     // Wire up callback for parameter changes from UI
     gui_->setParamChangeCallback([this](int paramId, float value) {
       // Update the internal parameter value
-      instance_.setParameterValue(static_cast<clap_id>(paramId), value);
+      if (instance_) instance_->setParameterValue(static_cast<clap_id>(paramId), value);
 
       // Notify the host that a parameter changed (if host supports it)
       if (hostParams_ && host_) {
@@ -458,14 +462,14 @@ private:
   const clap_host_t *host_;
   const clap_host_params_t *hostParams_ = nullptr;
   PluginManifest manifest_;
-  PluginInstance instance_;
+  std::unique_ptr<IPluginInstance> instance_;
   std::unique_ptr<Gui> gui_;
 };
 
 // C wrapper for clap_plugin
 struct PluginWrapper {
   clap_plugin_t plugin;
-  ClaspPlugin impl;
+  ThunderPlugin impl;
 
   PluginWrapper(const clap_host_t *host, const clap_plugin_descriptor_t *desc,
                 const PluginManifest &manifest)

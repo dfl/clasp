@@ -13,7 +13,7 @@
 
 namespace clasp {
 
-Gui::Gui(PluginInstance *plugin, const PluginManifest &manifest)
+Gui::Gui(IPluginInstance *plugin, const PluginManifest &manifest)
     : plugin_(plugin), manifest_(manifest),
       width_(manifest.ui.width), height_(manifest.ui.height) {}
 

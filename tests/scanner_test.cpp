@@ -5,46 +5,44 @@
 
 namespace fs = std::filesystem;
 
-TEST_CASE("Scanner Manifest Loading", "[scanner]") {
-  // Setup a dummy bundle with absolute path
-  fs::path bundlePath = fs::absolute("TestPlugin.clasp");
+TEST_CASE("Scanner WCLAP Bundle Detection", "[scanner]") {
+  // Setup a dummy .wclap bundle with module.wasm
+  fs::path bundlePath = fs::absolute("TestPlugin.wclap");
   fs::create_directories(bundlePath);
 
-  std::ofstream f(bundlePath / "plugin.json");
-  f << R"({
-        "id": "com.test.plugin",
-        "name": "Test Plugin",
-        "vendor": "Test Vendor",
-        "version": "1.0.0",
-        "audio": { "inputs": 2, "outputs": 2 },
-        "parameters": [
-            { "id": 0, "name": "Gain", "min": 0.0, "max": 2.0, "default": 1.0 }
-        ]
-    })";
-  f.close();
-
-  // Scanner expects dsp.wasm to exist
-  std::ofstream wasm(bundlePath / "dsp.wasm");
+  // Create a dummy module.wasm (just needs to exist)
+  std::ofstream wasm(bundlePath / "module.wasm");
   wasm.close();
 
   clasp::Scanner scanner;
   auto manifest = scanner.loadManifest(bundlePath.string());
 
-  REQUIRE(manifest.has_value());
-  CHECK(manifest->id == "com.test.plugin");
-  CHECK(manifest->name == "Test Plugin");
-  CHECK(manifest->audio.inputs == 2);
-  REQUIRE(manifest->parameters.size() == 1);
-  CHECK(manifest->parameters[0].name == "Gain");
+  // Without cached metadata, this should return nullopt
+  // (WCLAP requires either cached metadata or runtime introspection)
+  CHECK_FALSE(manifest.has_value());
+
+  // Cleanup
+  fs::remove_all(bundlePath);
+}
+
+TEST_CASE("Scanner Invalid Bundle", "[scanner]") {
+  // Setup a bundle without module.wasm
+  fs::path bundlePath = fs::absolute("Invalid.wclap");
+  fs::create_directories(bundlePath);
+
+  clasp::Scanner scanner;
+  auto manifest = scanner.loadManifest(bundlePath.string());
+
+  // Should fail - no module.wasm
+  CHECK_FALSE(manifest.has_value());
 
   // Cleanup
   fs::remove_all(bundlePath);
 }
 
 TEST_CASE("Path Expansion", "[scanner]") {
-  // This is hard to test cross-platform with hardcoded ~ but we can check
-  // relative expansion
+  // Relative paths shouldn't change
   std::string path = "relative/path";
   auto expanded = clasp::expandPath(path);
-  CHECK(expanded == path); // Relative paths shouldn't change
+  CHECK(expanded == path);
 }
