@@ -1,4 +1,4 @@
-# CLASP - Tooling for Fast WCLAP Plugin Development
+# clasp - Tooling for Fast WCLAP Plugin Development
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/version-1.0.0--beta-green.svg)](https://github.com/dfl/clasp)
@@ -6,7 +6,7 @@
 
 > **Rapid iteration tools for WCLAP audio plugin development**
 
-**CLASP** provides tooling for building [WCLAP](https://github.com/user/wclap) audio plugins with fast iteration cycles:
+**clasp** provides tooling for building [WCLAP](https://github.com/user/wclap) audio plugins with fast iteration cycles:
 
 - **thunder.clap** - A dev-oriented meta-host with hot-reload for rapid iteration
 - **clasp-create** - CLI tool for scaffolding new WCLAP projects
