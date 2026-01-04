@@ -424,6 +424,11 @@ void Gui::queueNoteOff(int channel, int key) {
   pendingNotes_.push_back({channel, key, 0.0f, false});
 }
 
+void Gui::queueMidiCC(int channel, int cc, int value) {
+  std::lock_guard<std::mutex> lock(updateMutex_);
+  pendingCCs_.push_back({channel, cc, value});
+}
+
 void Gui::processQueuedUpdates() {
 #if CLASP_HAS_WEBVIEW
   if (!impl_->webview || !visible_)
@@ -431,13 +436,16 @@ void Gui::processQueuedUpdates() {
 
   std::vector<ParamUpdate> params;
   std::vector<NoteEvent> notes;
+  std::vector<MidiCCEvent> ccs;
 
   {
     std::lock_guard<std::mutex> lock(updateMutex_);
     params = std::move(pendingParams_);
     notes = std::move(pendingNotes_);
+    ccs = std::move(pendingCCs_);
     pendingParams_.clear();
     pendingNotes_.clear();
+    pendingCCs_.clear();
   }
 
   // Process parameter updates
@@ -458,6 +466,15 @@ void Gui::processQueuedUpdates() {
                      eventName + "(" + std::to_string(n.channel) + ", " +
                      std::to_string(n.key) + ", " + std::to_string(n.velocity) +
                      "); }";
+    impl_->webview->evaluateJavascript(js);
+  }
+
+  // Process MIDI CCs
+  for (const auto &c : ccs) {
+    std::string js = "if (window.clasp && window.clasp.onMidiCC) { "
+                     "window.clasp.onMidiCC(" +
+                     std::to_string(c.channel) + ", " + std::to_string(c.cc) +
+                     ", " + std::to_string(c.value) + "); }";
     impl_->webview->evaluateJavascript(js);
   }
 #endif

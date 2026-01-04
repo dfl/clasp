@@ -124,6 +124,17 @@ html, body {
 }
 ```
 
+## CLI Tools
+
+### clasp-precompile
+Pre-compiles all WASM plugins to warm up the AOT cache:
+
+```bash
+./build/clasp-precompile
+```
+
+This is useful after installing new plugins to avoid slow first-load.
+
 ## Version
 
 Current: `0.1.0-alpha` (see VERSION file)
@@ -133,5 +144,22 @@ Current: `0.1.0-alpha` (see VERSION file)
 No test suite yet. Manual testing:
 1. Build and install clasp.clap
 2. Build example plugin, copy to ~/.clasp/plugins/
-3. Open DAW, scan plugins, look for "Plugin Name (clasp)"
-4. Open GUI, move controls, verify parameter changes affect audio
+3. Run `clasp-precompile` to warm cache
+4. Open DAW, scan plugins, look for "Plugin Name (clasp)"
+5. Open GUI, move controls, verify parameter changes affect audio
+
+## Future Work
+
+### High Priority
+- **Background pre-compilation during scan**: While the CLI tool exists, move this to a background thread inside `factory_init()` for an even smoother experience.
+- **Improved MIDI Mapping**: Persistent storage for MIDI learned mappings.
+
+### Medium Priority  
+- **Windows/Linux GUI embedding**: Add `gui_win32.cpp` and `gui_linux.cpp` for cross-platform WebView embedding.
+- **Preset management in GUI**: JavaScript API for saving/loading presets.
+- **Parameter groups**: Support for organizing parameters in the UI.
+
+### Low Priority
+- **WebView hot reload**: Watch ui/ folder and reload WebView on file changes during development.
+- **WebView size constraints**: Properly handle `canResize()` and `adjustSize()` for resizable UIs.
+

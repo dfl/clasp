@@ -120,7 +120,45 @@ public:
   void stopProcessing() { instance_.stopProcessing(); }
 
   clap_process_status process(const clap_process_t *process) {
-    return instance_.process(process);
+    bool guiUpdateQueued = false;
+
+    // Scan events for GUI notification
+    if (gui_ && process->in_events) {
+      uint32_t size = process->in_events->size(process->in_events);
+      for (uint32_t i = 0; i < size; ++i) {
+        auto event = process->in_events->get(process->in_events, i);
+        if (event->type == CLAP_EVENT_NOTE_ON) {
+          auto note = reinterpret_cast<const clap_event_note_t *>(event);
+          gui_->queueNoteOn(note->channel, note->key,
+                            static_cast<float>(note->velocity));
+          guiUpdateQueued = true;
+        } else if (event->type == CLAP_EVENT_NOTE_OFF) {
+          auto note = reinterpret_cast<const clap_event_note_t *>(event);
+          gui_->queueNoteOff(note->channel, note->key);
+          guiUpdateQueued = true;
+        } else if (event->type == CLAP_EVENT_MIDI) {
+          auto midi = reinterpret_cast<const clap_event_midi_t *>(event);
+          if ((midi->data[0] & 0xF0) == 0xB0) { // CC
+            gui_->queueMidiCC(midi->data[0] & 0x0F, midi->data[1],
+                              midi->data[2]);
+            guiUpdateQueued = true;
+          }
+        } else if (event->type == CLAP_EVENT_PARAM_VALUE) {
+          auto pv = reinterpret_cast<const clap_event_param_value_t *>(event);
+          gui_->queueParameterUpdate(static_cast<int>(pv->param_id),
+                                     static_cast<float>(pv->value));
+          guiUpdateQueued = true;
+        }
+      }
+    }
+
+    auto status = instance_.process(process);
+
+    if (guiUpdateQueued && host_) {
+      host_->request_callback(host_);
+    }
+
+    return status;
   }
 
   // Parameters extension
@@ -175,6 +213,9 @@ public:
         if (gui_) {
           gui_->queueParameterUpdate(static_cast<int>(pv->param_id),
                                      static_cast<float>(pv->value));
+          if (host_) {
+            host_->request_callback(host_);
+          }
         }
       }
     }
@@ -321,6 +362,13 @@ public:
     return gui_->hide();
   }
 
+  // Process queued GUI updates (called from main thread)
+  void processGuiUpdates() {
+    if (gui_) {
+      gui_->processQueuedUpdates();
+    }
+  }
+
 private:
   const clap_host_t *host_;
   const clap_host_params_t *hostParams_ = nullptr;
@@ -372,7 +420,10 @@ struct PluginWrapper {
       return static_cast<PluginWrapper *>(p->plugin_data)->impl.process(proc);
     };
     plugin.get_extension = getExtension;
-    plugin.on_main_thread = [](const clap_plugin_t *p) {};
+    plugin.on_main_thread = [](const clap_plugin_t *p) {
+      // Process any queued GUI updates on the main thread
+      static_cast<PluginWrapper *>(p->plugin_data)->impl.processGuiUpdates();
+    };
   }
 
   static const void *getExtension(const clap_plugin_t *p, const char *id);

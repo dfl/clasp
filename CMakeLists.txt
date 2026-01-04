@@ -120,6 +120,11 @@ install(TARGETS clasp
     BUNDLE DESTINATION "${CLAP_INSTALL_DIR}"
 )
 
+# CLI Tools
+add_executable(clasp-precompile tools/precompile.cpp)
+target_link_libraries(clasp-precompile PRIVATE clasp_core)
+# CLI tool is not installed - run from build directory: ./build/clasp-precompile
+
 # Examples (WASM plugins are built separately with wasi-sdk/cargo)
 if(CLASP_BUILD_EXAMPLES)
     # Copy example plugin.json files to build directory for testing

@@ -49,6 +49,9 @@ public:
   // Process queued updates on main thread (call from on_main_thread)
   void processQueuedUpdates();
 
+  // Thread-safe MIDI CC notifications
+  void queueMidiCC(int channel, int cc, int value);
+
   // Legacy direct notification (use queueParameterUpdate instead)
   void notifyParameterChanged(int paramId, float value);
 
@@ -82,10 +85,16 @@ private:
     float velocity;
     bool isNoteOn;
   };
+  struct MidiCCEvent {
+    int channel;
+    int cc;
+    int value;
+  };
 
   std::mutex updateMutex_;
   std::vector<ParamUpdate> pendingParams_;
   std::vector<NoteEvent> pendingNotes_;
+  std::vector<MidiCCEvent> pendingCCs_;
 
   // Throttling (max 60 updates per second per parameter)
   static constexpr int MAX_PARAMS = 256;
