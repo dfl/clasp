@@ -1,0 +1,38 @@
+{
+  "name": "clasp-create",
+  "version": "1.0.0",
+  "description": "CLI tool for creating WCLAP audio plugins",
+  "type": "module",
+  "bin": {
+    "clasp-create": "./dist/cli.js",
+    "clasp": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node dist/cli.js"
+  },
+  "keywords": [
+    "clap",
+    "wclap",
+    "audio",
+    "plugin",
+    "wasm",
+    "webassembly"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "commander": "^12.0.0",
+    "inquirer": "^9.2.0",
+    "chalk": "^5.3.0",
+    "ora": "^8.0.0",
+    "fs-extra": "^11.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/inquirer": "^9.0.0",
+    "@types/fs-extra": "^11.0.0",
+    "typescript": "^5.3.0"
+  }
+}

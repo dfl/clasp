@@ -106,10 +106,15 @@ install(TARGETS clasp
     BUNDLE DESTINATION "${CLAP_INSTALL_DIR}"
 )
 
-# CLI Tools
+# CLI Tools (legacy - being replaced by packages/clasp-create)
 add_executable(clasp-tool tools/clasp-tool.cpp)
 target_link_libraries(clasp-tool PRIVATE clasp_core)
-# CLI tool is not installed - run from build directory: ./build/clasp-tool
+
+# Development Host Plugin
+option(CLASP_BUILD_DEV_HOST "Build clasp-host development plugin" ON)
+if(CLASP_BUILD_DEV_HOST)
+    add_subdirectory(packages/clasp-host)
+endif()
 
 # Examples (WASM plugins are built separately with wasi-sdk/cargo)
 if(CLASP_BUILD_EXAMPLES)
