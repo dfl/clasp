@@ -6,12 +6,14 @@
 
 > **Native CLAP wrapper for WASM — ✨ Compile once, run everywhere!**
 
-**CLASP** (CLAP + WASM) is a high-performance native CLAP plugin that hosts WebAssembly DSP modules. Write your audio code once in C++, Rust, Zig, or any WASM-targeting language, and run it in any DAW (Bitwig, REAPER, Ableton Live 12, etc.) on any platform.
+**CLASP** (CLAP + WASM) is a performance-focused host for WebAssembly audio modules. As a developer with a deep love for both high-end DSP and web technologies, I built CLASP to bridge the gap between native performance and the ease of modern web development. 
+
+The goal is simple: write your audio logic once in C++, Rust, Zig, or AssemblyScript, and have it "just work" in any DAW across macOS, Windows, and Linux.
 
 ---
 
 ### Development Status
-CLASP is currently in **Beta (1.0.0-beta)**. We are actively implementing more CLAP extensions and improving cross-platform stability. Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md).
+We're currently in **1.0.0-beta**. I'm actively expanding support for more CLAP extensions and refining the cross-platform experience. If you find a bug or have a feature idea, I'd love to hear from you. Check out [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -36,68 +38,67 @@ CLASP is currently in **Beta (1.0.0-beta)**. We are actively implementing more C
 
 ---
 
-## Features
+## What makes CLASP different?
 
-- **One binary, many plugins**: A single `clasp.clap` installs once and dynamically loads all your `.clasp` bundles.
-- **Cross-platform DSP**: True write-once-run-anywhere audio logic via WebAssembly.
-- **High Performance**: Powered by Wasmtime (JIT) with SIMD support and AOT caching for instant plugin instantiation.
-- **Modern Web UI**: Build responsive interfaces using standard HTML5/CSS3/JS via an embedded WebView.
-- **Full MIDI & MPE**: Comprehensive support for Note events, CCs, and MIDI Polyphonic Expression (MPE).
-- **Integrated Tooling**: Includes `clasp-tool` for instant scaffolding and cache management.
+I've always been frustrated by the friction of cross-platform audio development. CLASP solves this by bringing modern runtime technology to the audio world:
+
+- **Unified Binary**: You install `clasp.clap` once. It acts as a dynamic host that finds and loads all your `.clasp` bundles on the fly.
+- **Portability by Design**: Your DSP logic lives in WebAssembly. No more managing three different toolchains just to share a plugin with a friend on another OS.
+- **Wasmtime JIT**: Performance is critical. CLASP uses Wasmtime to JIT-compile your code with SIMD support. It also caches the native result for near-instant startup on subsequent loads.
+- **HTML5 UIs**: Skip the complicated C++ GUI frameworks. Build your interface with the tools you already know: HTML, CSS, and standard JavaScript.
+- **Expressive Control**: Full support for MIDI, CCs, and MIDI Polyphonic Expression (MPE).
+
+---
 
 ## Quick Start
 
-### Building the Native Wrapper
+### 1. Build the Native Wrapper
+
+First, you'll need to build the host wrapper itself. This only needs to be done once.
 
 ```bash
 # Clone with submodules
 git clone --recursive https://github.com/dflowenfels/clasp.git
 cd clasp
 
-# Build and install (macOS/Linux)
+# Build and install to your CLAP plugins folder
 make install
-
-# Or build for specific architecture
-make release ARCH=universal   # macOS: fat binary (x86_64 + arm64)
-make release ARCH=arm64       # macOS: Apple Silicon only
 ```
 
-### Generating a Plugin (`clasp-tool`)
+### 2. Scaffold a New Plugin (`clasp-tool`)
 
-The easiest way to start is with the built-in `clasp-tool`:
+I've included a helper tool called `clasp-tool` to get you started immediately with a working template. From your build directory:
 
 ```bash
-# Create a new C++ plugin (default)
-./build/clasp-tool create "My Gain"
+# Generate a new plugin (defaults to C++)
+./build/clasp-tool create "My Gain Effect"
 
-# Create a Rust plugin
+# Or try another language
 ./build/clasp-tool create --lang rust "Rust Synth"
-
-# Create an AssemblyScript plugin
-./build/clasp-tool create --lang as "Web FX"
+./build/clasp-tool create --lang as "AssemblyScript FX"
 ```
 
-This scaffolds a complete project structure with DSP boilerplate, a responsive UI, and build scripts.
+This creates a project structure containing your DSP code, a responsive UI, the `plugin.json` manifest, and a build script to generate the final `.wasm`.
 
-### Creating a WASM Plugin (Manual)
+### 3. Manual Plugin Structure
 
-1. Create a `.clasp` bundle:
+If you prefer to build from scratch, a `.clasp` plugin is just a folder containing:
 
 ```
 MyPlugin.clasp/
-├── plugin.json     # Plugin metadata
-├── dsp.wasm        # Your DSP code compiled to WASM
-└── ui/             # Optional HTML UI
+├── plugin.json     # Metadata and parameter definitions
+├── dsp.wasm        # Your DSP logic (compiled WASM)
+└── ui/             # (Optional) HTML UI directory
     └── index.html
 ```
 
-2. Write `plugin.json`:
+#### Example `plugin.json`
 
 ```json
 {
-  "id": "com.yourname.myplugin",
-  "name": "My Plugin",
-  "vendor": "Your Name",
+  "id": "com.example.gain",
+  "name": "Simple Gain",
+  "vendor": "Dev Name",
   "version": "1.0.0",
   "type": "effect",
   "audio": { "inputs": 2, "outputs": 2 },
@@ -107,254 +108,81 @@ MyPlugin.clasp/
 }
 ```
 
-3. Implement the DSP ABI:
-
-```cpp
-extern "C" {
-    void dsp_init(float sampleRate, int maxBlockSize);
-    void dsp_process(int blockSize);
-    void dsp_set_param(int paramId, float value);
-    float* dsp_get_input_buffer(int channel);
-    float* dsp_get_output_buffer(int channel);
-}
-```
-
-4. Compile to WASM (using wasi-sdk):
+#### Compile your logic (using wasi-sdk)
 
 ```bash
 clang++ --target=wasm32-wasi -O3 -msimd128 \
         -nostdlib -Wl,--no-entry -Wl,--export-dynamic \
-        -o dsp.wasm myplugin.cpp
+        -o dsp.wasm dsp.cpp
 ```
 
-5. Place your `.clasp` bundle in `~/.clasp/plugins/`
+Once built, move your `.clasp` folder to `~/.clasp/plugins/` (or the folder where `clasp.clap` resides) and it will be discovered by your DAW.
 
-### Building the Example Plugin
-
-```bash
-cd examples/gain-cpp
-cmake -B build
-cmake --build build
-
-# Install to plugins folder
-cp -R build/SimpleGain.clasp ~/.clasp/plugins/
-```
+---
 
 ## DSP ABI Reference
 
-### Required Exports (Effects & Instruments)
+To talk to the host, your WASM module should export these functions:
 
+### Required Exports
 ```c
 // Lifecycle
 void dsp_init(float sample_rate, int max_block_size);
 void dsp_reset();
 
-// Processing
+// Main processing loop
 void dsp_process(int block_size);
 
 // Parameters
 void dsp_set_param(int param_id, float value);
 float dsp_get_param(int param_id);
 
-// Audio Buffers (pointers into WASM linear memory)
+// Audio Buffer access (returning pointers into WASM linear memory)
 float* dsp_get_input_buffer(int channel);
 float* dsp_get_output_buffer(int channel);
 
-// State Persistence (optional)
+// Optional State Persistence
 int dsp_get_state_size();
 void dsp_get_state(uint8_t* out);
 void dsp_set_state(const uint8_t* in);
 ```
 
-### Additional Exports (Instruments Only)
-
+### Instruments (MPE Support)
 ```c
-void dsp_note_on(int32_t sample_offset, int16_t note_id,
-                 int16_t channel, int16_t key, float velocity);
-void dsp_note_off(int32_t sample_offset, int16_t note_id,
-                  int16_t channel, int16_t key, float velocity);
+void dsp_note_on(int32_t sample_offset, int16_t note_id, int16_t channel, int16_t key, float velocity);
+void dsp_note_off(int32_t sample_offset, int16_t note_id, int16_t channel, int16_t key, float velocity);
+void dsp_note_expression(int32_t offset, int16_t note_id, int16_t channel, int16_t key, int32_t expr_id, float value);
 ```
 
-## Plugin Discovery
-
-CLASP scans for `.clasp` bundles in:
-
-1. `~/.clasp/plugins/`
-2. Same directory as `clasp.clap`
-3. Paths in `CLASP_PLUGIN_PATH` environment variable (colon-separated)
-
-Discovered plugins appear in your DAW as "Plugin Name (clasp)".
+---
 
 ## UI Development
 
-Create `ui/index.html` in your bundle. Add UI dimensions to `plugin.json`:
-
-```json
-{
-  "ui": {
-    "entry": "ui/index.html",
-    "width": 300,
-    "height": 200
-  }
-}
-```
-
-### CSS Best Practices
-
-For a polished plugin UI, disable text selection and scrolling:
-
-```css
-html, body {
-    /* Disable text selection */
-    user-select: none;
-    -webkit-user-select: none;
-    
-    /* Disable scrolling and overscroll */
-    overflow: hidden;
-    overscroll-behavior: none;
-}
-```
-
-### Example UI
-
-```html
-<!DOCTYPE html>
-<html>
-<body>
-    <input type="range" id="gain" min="0" max="2" step="0.01">
-    <script>
-        document.getElementById('gain').addEventListener('input', (e) => {
-            clasp.setParam(0, parseFloat(e.target.value));
-        });
-
-        window.onClaspReady = () => {
-            document.getElementById('gain').value = clasp.getParam(0);
-            clasp.onParamChange = (id, value) => {
-                if (id === 0) document.getElementById('gain').value = value;
-            };
-        };
-    </script>
-</body>
-</html>
-```
-
-### JavaScript API
+The UI is a simple WebView. You can access the host via the `clasp` object in vanilla JavaScript:
 
 ```javascript
-// Parameter control
-clasp.setParam(id, value)     // Set parameter value
-clasp.getParam(id)            // Get parameter value  
-clasp.getPluginInfo()         // Get plugin metadata {id, name, parameters[]}
+// Change a parameter from the UI
+clasp.setParam(0, 0.5);
 
-// Callbacks from host (set these in your UI)
-clasp.onParamChange = (id, value) => {}  // Automation updates
-clasp.onNoteOn = (channel, key, velocity) => {}  // MIDI note on
-clasp.onNoteOff = (channel, key, velocity) => {} // MIDI note off
-clasp.onMidiCC = (channel, cc, value) => {}      // MIDI CC
-
-// MIDI Learn
-clasp.startMidiLearn(paramId) // Enter learn mode for parameter
-clasp.stopMidiLearn()         // Cancel learn mode
-clasp.mapMidiCC(ch, cc, paramId) // Manually map CC to parameter
-clasp.unmapMidiCC(ch, cc)     // Remove mapping
+// Listen for updates from the host (automation, etc)
+clasp.onParamChange = (id, value) => {
+    console.log(`Param ${id} is now ${value}`);
+};
 ```
 
-### Developer Tools
+I recommend using [Vite](https://vitejs.dev/) if you want a more modern TypeScript/React/Vue setup for your interface. Just set the build output to your `ui/` folder.
 
-Right-click in the WebView to open Developer Tools for debugging your UI. This provides a full browser inspector with console, network, and DOM inspection. Developer tools are enabled in debug builds.
-
-### Using TypeScript
-
-TypeScript must be compiled to JavaScript before use. Recommended workflow:
-
-```bash
-# Create a TypeScript project in your ui/ folder
-cd MyPlugin.clasp/ui
-npm init -y
-npm install -D typescript vite
-
-# Development with hot reload
-npx vite dev
-
-# Build for production
-npx vite build
-# Copy dist/ contents to ui/ folder
-```
-
-Your `vite.config.ts`:
-```typescript
-export default {
-  build: {
-    outDir: '.', // Output directly to ui/
-    rollupOptions: {
-      input: 'index.html'
-    }
-  }
-}
-```
-
-## AOT Caching
-
-First load compiles WASM to native code (JIT). Subsequent loads use cached `.cwasm` files from `~/.clasp/cache/` for instant startup.
-
-## Examples
-
-See `examples/` for complete implementations:
-
-- `gain-cpp/` - Simple stereo gain effect (C++)
-- `gain-rust/` - Same effect in Rust
-- `synth-cpp/` - Polyphonic synthesizer (C++)
-
-## Dependencies
-
-| Dependency | Purpose | Source |
-|------------|---------|--------|
-| [Wasmtime](https://wasmtime.dev/) | WASM runtime (JIT/AOT) | Auto-fetched |
-| [CLAP](https://cleveraudio.org/) | Plugin API | Git submodule |
-| [clap-helpers](https://github.com/free-audio/clap-helpers) | C++ helpers | Git submodule |
-| [CHOC](https://github.com/Tracktion/choc) | WebView + utilities | Git submodule |
-| [wasi-sdk](https://github.com/WebAssembly/wasi-sdk) | WASM compiler | Auto-fetched (examples) |
-
-## Building from Source
-
-### Requirements
-
-- CMake 3.16+
-- C++17 compiler (Clang, GCC, MSVC)
-- Git (for submodules)
-
-### Build Commands
-
-```bash
-make                  # Build release for current platform
-make debug            # Build with debug symbols
-make install          # Build, sign, and install to CLAP folder
-make package          # Create distributable archive
-make clean            # Remove build artifacts
-```
-
-### Cross-Platform Builds
-
-```bash
-# macOS
-make release ARCH=universal    # Fat binary (Intel + Apple Silicon)
-
-# Linux
-make release                   # Native build
-
-# Windows (use Developer Command Prompt)
-cmake -B build -G "Visual Studio 17 2022"
-cmake --build build --config Release
-```
+---
 
 ## Contributing
 
-We love contributions! Please read our [CONTRIBUTING.md](CONTRIBUTING.md) to get started.
+I'm a big fan of collaboration, pair programming, and rigorous testing. If you're interested in making CLASP better, please check out the [CONTRIBUTING.md](CONTRIBUTING.md) guide.
 
 ## Author(s)
 
-David Lowenfels
+**David Lowenfels**  
+Creative developer, DSP enthusiast, and polymath based in the UK.
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) for details.
+MIT License. See [LICENSE](LICENSE) for details.
