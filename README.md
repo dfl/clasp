@@ -10,7 +10,7 @@
 
 ---
 
-### 🚦 Development Status
+### Development Status
 CLASP is currently in **Beta (1.0.0-beta)**. We are actively implementing more CLAP extensions and improving cross-platform stability. Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ```
@@ -36,18 +36,18 @@ CLASP is currently in **Beta (1.0.0-beta)**. We are actively implementing more C
 
 ---
 
-## 🌟 Key Features
+## Features
 
-- **📦 One binary, many plugins**: A single `clasp.clap` installs once and dynamically loads all your `.clasp` bundles.
-- **🌍 Cross-platform DSP**: True write-once-run-anywhere audio logic via WebAssembly.
-- **⚡ High Performance**: Powered by **Wasmtime** (JIT) with SIMD support and AOT caching for instant plugin instantiation.
-- **🎨 Modern Web UI**: Build stunning, responsive interfaces using standard HTML5/CSS3/JS via an embedded WebView.
-- **🎹 Full MIDI & MPE**: Comprehensive support for Note events, CCs, and **MIDI Polyphonic Expression (MPE)**.
-- **🛠 Integrated Tooling**: Includes `clasp-tool` for instant scaffolding and cache management.
+- **One binary, many plugins**: A single `clasp.clap` installs once and dynamically loads all your `.clasp` bundles.
+- **Cross-platform DSP**: True write-once-run-anywhere audio logic via WebAssembly.
+- **High Performance**: Powered by Wasmtime (JIT) with SIMD support and AOT caching for instant plugin instantiation.
+- **Modern Web UI**: Build responsive interfaces using standard HTML5/CSS3/JS via an embedded WebView.
+- **Full MIDI & MPE**: Comprehensive support for Note events, CCs, and MIDI Polyphonic Expression (MPE).
+- **Integrated Tooling**: Includes `clasp-tool` for instant scaffolding and cache management.
 
-## 🚀 Quick Start
+## Quick Start
 
-### 🛠 Building the Native Wrapper
+### Building the Native Wrapper
 
 ```bash
 # Clone with submodules
@@ -62,7 +62,24 @@ make release ARCH=universal   # macOS: fat binary (x86_64 + arm64)
 make release ARCH=arm64       # macOS: Apple Silicon only
 ```
 
-### 📦 Creating a WASM Plugin (Manual)
+### Generating a Plugin (`clasp-tool`)
+
+The easiest way to start is with the built-in `clasp-tool`:
+
+```bash
+# Create a new C++ plugin (default)
+./build/clasp-tool create "My Gain"
+
+# Create a Rust plugin
+./build/clasp-tool create --lang rust "Rust Synth"
+
+# Create an AssemblyScript plugin
+./build/clasp-tool create --lang as "Web FX"
+```
+
+This scaffolds a complete project structure with DSP boilerplate, a responsive UI, and build scripts.
+
+### Creating a WASM Plugin (Manual)
 
 1. Create a `.clasp` bundle:
 
@@ -112,24 +129,7 @@ clang++ --target=wasm32-wasi -O3 -msimd128 \
 
 5. Place your `.clasp` bundle in `~/.clasp/plugins/`
 
-### ⚡ Generating a Plugin (`clasp-tool`)
-
-The easiest way to start is with the built-in `clasp-tool`:
-
-```bash
-# Create a new C++ plugin (default)
-./build/clasp-tool create "My Gain"
-
-# Create a Rust plugin
-./build/clasp-tool create --lang rust "Rust Synth"
-
-# Create an AssemblyScript plugin
-./build/clasp-tool create --lang as "Web FX"
-```
-
-This scaffolds a complete project structure with DSP boilerplate, a responsive UI, and build scripts.
-
-### 🧪 Building the Example Plugin
+### Building the Example Plugin
 
 ```bash
 cd examples/gain-cpp
@@ -140,7 +140,7 @@ cmake --build build
 cp -R build/SimpleGain.clasp ~/.clasp/plugins/
 ```
 
-## 🧬 DSP ABI Reference
+## DSP ABI Reference
 
 ### Required Exports (Effects & Instruments)
 
@@ -175,7 +175,7 @@ void dsp_note_off(int32_t sample_offset, int16_t note_id,
                   int16_t channel, int16_t key, float velocity);
 ```
 
-## 🔍 Plugin Discovery
+## Plugin Discovery
 
 CLASP scans for `.clasp` bundles in:
 
@@ -185,7 +185,7 @@ CLASP scans for `.clasp` bundles in:
 
 Discovered plugins appear in your DAW as "Plugin Name (clasp)".
 
-## 💻 UI Development
+## UI Development
 
 Create `ui/index.html` in your bundle. Add UI dimensions to `plugin.json`:
 
@@ -261,7 +261,7 @@ clasp.unmapMidiCC(ch, cc)     // Remove mapping
 
 ### Developer Tools
 
-**Right-click in the WebView to open Developer Tools** for debugging your UI. This provides a full browser inspector with console, network, and DOM inspection. Developer tools are enabled in debug builds.
+Right-click in the WebView to open Developer Tools for debugging your UI. This provides a full browser inspector with console, network, and DOM inspection. Developer tools are enabled in debug builds.
 
 ### Using TypeScript
 
@@ -293,11 +293,11 @@ export default {
 }
 ```
 
-## ❄️ AOT Caching
+## AOT Caching
 
 First load compiles WASM to native code (JIT). Subsequent loads use cached `.cwasm` files from `~/.clasp/cache/` for instant startup.
 
-## 📚 Examples
+## Examples
 
 See `examples/` for complete implementations:
 
@@ -305,7 +305,7 @@ See `examples/` for complete implementations:
 - `gain-rust/` - Same effect in Rust
 - `synth-cpp/` - Polyphonic synthesizer (C++)
 
-## 🔗 Dependencies
+## Dependencies
 
 | Dependency | Purpose | Source |
 |------------|---------|--------|
@@ -315,7 +315,7 @@ See `examples/` for complete implementations:
 | [CHOC](https://github.com/Tracktion/choc) | WebView + utilities | Git submodule |
 | [wasi-sdk](https://github.com/WebAssembly/wasi-sdk) | WASM compiler | Auto-fetched (examples) |
 
-## 🏗 Building from Source
+## Building from Source
 
 ### Requirements
 
@@ -347,14 +347,14 @@ cmake -B build -G "Visual Studio 17 2022"
 cmake --build build --config Release
 ```
 
-## 🤝 Contributing
+## Contributing
 
 We love contributions! Please read our [CONTRIBUTING.md](CONTRIBUTING.md) to get started.
 
-## ✍️ Author
-...
-<truncated 5 lines>
-...
-## 📜 License
+## Author(s)
+
+David Lowenfels
+
+## License
 
 MIT License - see [LICENSE](LICENSE) for details.
