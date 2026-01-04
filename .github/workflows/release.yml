@@ -54,25 +54,25 @@ jobs:
         if: runner.os == 'macOS'
         run: |
           cd build
-          zip -r ../clasp-${{ matrix.name }}.zip clasp.clap clasp-tool
+          zip -r ../thunder-${{ matrix.name }}.zip thunder.clap
 
       - name: Package (Linux)
         if: runner.os == 'Linux'
         run: |
           cd build
-          tar czf ../clasp-${{ matrix.name }}.tar.gz clasp.clap clasp-tool
+          tar czf ../thunder-${{ matrix.name }}.tar.gz thunder.clap
 
       - name: Package (Windows)
         if: runner.os == 'Windows'
         run: |
           cd build
-          7z a ../clasp-${{ matrix.name }}.zip Release/clasp.clap Release/clasp-tool.exe
+          7z a ../thunder-${{ matrix.name }}.zip Release/thunder.clap
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: clasp-${{ matrix.name }}
-          path: clasp-${{ matrix.name }}.*
+          name: thunder-${{ matrix.name }}
+          path: thunder-${{ matrix.name }}.*
 
   release:
     needs: build
