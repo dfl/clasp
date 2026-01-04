@@ -1,12 +1,12 @@
-# CLASP - WCLAP Authoring Framework
+# CLASP - Tooling for Fast WCLAP Plugin Development
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/version-1.0.0--beta-green.svg)](https://github.com/dfl/clasp)
 [![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey.svg)](https://github.com/dfl/clasp)
 
-> **A framework for creating WCLAP audio plugins with web-based UIs**
+> **Rapid iteration tools for WCLAP audio plugin development**
 
-**CLASP** is an authoring framework for building [WCLAP](https://github.com/user/wclap) audio plugins - the WebAssembly-based CLAP plugin format. It provides:
+**CLASP** provides tooling for building [WCLAP](https://github.com/user/wclap) audio plugins with fast iteration cycles:
 
 - **thunder.clap** - A dev-oriented meta-host with hot-reload for rapid iteration
 - **clasp-create** - CLI tool for scaffolding new WCLAP projects
