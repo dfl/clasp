@@ -17,10 +17,17 @@ Runtime &Runtime::instance() {
 
 Runtime::Runtime() {
   // Set default cache directory
+#ifdef _WIN32
+  const char *appData = getenv("LOCALAPPDATA");
+  if (appData) {
+    cacheDir_ = std::string(appData) + "\\clasp\\cache";
+  }
+#else
   const char *home = getenv("HOME");
   if (home) {
     cacheDir_ = std::string(home) + "/.clasp/cache";
   }
+#endif
 
   // Create engine with optimized configuration for DSP
   wasm_config_t *config = wasm_config_new();
