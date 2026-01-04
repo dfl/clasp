@@ -141,7 +141,7 @@ if(CLASP_BUILD_EXAMPLES)
 endif()
 
 # Testing
-option(CLASP_BUILD_TESTS "Build unit tests" ON)
+option(CLASP_BUILD_TESTS "Build unit tests" OFF)
 if(CLASP_BUILD_TESTS)
     include(FetchContent)
     FetchContent_Declare(

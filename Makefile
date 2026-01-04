@@ -117,7 +117,8 @@ endif
 	@echo "Package created in dist/"
 
 # Unit tests
-test: debug
+test: 
+	$(MAKE) build BUILD_TYPE=Debug CMAKE_FLAGS="$(CMAKE_FLAGS) -DCLASP_BUILD_TESTS=ON"
 	@echo "==> Running tests..."
 	@cd $(BUILD_DIR) && ctest --output-on-failure
 
