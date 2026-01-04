@@ -174,6 +174,7 @@ npx asc src/plugin.ts -o module.wasm --optimize
 ## Related Projects
 
 - [WCLAP](https://github.com/user/wclap) - WebAssembly CLAP specification
+- [wclap-bridge](https://github.com/user/wclap-bridge) - Wasmtime runtime for hosting WCLAP plugins
 - [wclap-cpp](https://github.com/user/wclap-cpp) - Header-only C++ library for WASM boundary marshalling
 - [clasp-gui](https://github.com/dfl/clasp-gui) - Decoupled WebView + Protocol library
 
