@@ -32,6 +32,11 @@ set(CHOC_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/extern/choc")
 # wclap-cpp is header-only
 set(WCLAP_CPP_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/extern/wclap-cpp/include")
 
+# clasp-gui for WebView support
+set(CHOC_DIR "${CHOC_INCLUDE_DIR}")
+set(CLAP_DIR "${CMAKE_CURRENT_SOURCE_DIR}/extern/clap")
+add_subdirectory(extern/clasp-gui EXCLUDE_FROM_ALL)
+
 # clasp library (shared code)
 set(CLASP_CORE_SOURCES
     src/runtime.cpp
@@ -41,18 +46,6 @@ set(CLASP_CORE_SOURCES
     src/state.cpp
     src/gui.cpp
 )
-
-# Add platform-specific GUI embedding
-if(APPLE)
-    list(APPEND CLASP_CORE_SOURCES src/gui_cocoa.mm)
-    set_source_files_properties(src/gui_cocoa.mm PROPERTIES
-        COMPILE_FLAGS "-fobjc-arc"
-    )
-elseif(WIN32)
-    list(APPEND CLASP_CORE_SOURCES src/gui_win32.cpp)
-elseif(UNIX AND NOT APPLE)
-    list(APPEND CLASP_CORE_SOURCES src/gui_linux.cpp)
-endif()
 
 add_library(clasp_core STATIC ${CLASP_CORE_SOURCES})
 
@@ -66,28 +59,9 @@ target_include_directories(clasp_core PUBLIC
 target_link_libraries(clasp_core PUBLIC
     clap
     clap-helpers
+    clasp-gui
     ${WASMTIME_LIBRARIES}
 )
-
-# Platform-specific libraries for CHOC WebView
-if(APPLE)
-    find_library(WEBKIT_FRAMEWORK WebKit REQUIRED)
-    find_library(COCOA_FRAMEWORK Cocoa REQUIRED)
-    target_link_libraries(clasp_core PUBLIC
-        ${WEBKIT_FRAMEWORK}
-        ${COCOA_FRAMEWORK}
-    )
-elseif(WIN32)
-    # WebView2 will be loaded dynamically by CHOC
-elseif(UNIX)
-    find_package(PkgConfig REQUIRED)
-    pkg_check_modules(WEBKIT2 webkit2gtk-4.1)
-    if(NOT WEBKIT2_FOUND)
-        pkg_check_modules(WEBKIT2 REQUIRED webkit2gtk-4.0)
-    endif()
-    target_include_directories(clasp_core PUBLIC ${WEBKIT2_INCLUDE_DIRS})
-    target_link_libraries(clasp_core PUBLIC ${WEBKIT2_LIBRARIES})
-endif()
 
 # clasp.clap plugin
 add_library(clasp MODULE
@@ -159,15 +133,15 @@ if(CLASP_BUILD_TESTS)
     )
     FetchContent_MakeAvailable(Catch2)
 
-    add_executable(clasp_tests 
+    add_executable(clasp_tests
         tests/scanner_test.cpp
         tests/runtime_test.cpp
     )
-    target_link_libraries(clasp_tests PRIVATE 
+    target_link_libraries(clasp_tests PRIVATE
         clasp_core
         Catch2::Catch2WithMain
     )
-    
+
     if(WIN32)
         add_custom_command(TARGET clasp_tests POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_if_different
@@ -176,10 +150,10 @@ if(CLASP_BUILD_TESTS)
             COMMENT "Copying wasmtime.dll to test output directory"
         )
     endif()
-    
+
     # Add project root for tests
     target_compile_definitions(clasp_tests PRIVATE CLASP_PROJECT_ROOT="${CMAKE_CURRENT_SOURCE_DIR}")
-    
+
     enable_testing()
     add_test(NAME clasp_tests COMMAND clasp_tests)
 endif()

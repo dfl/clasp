@@ -9,6 +9,11 @@
 [submodule "extern/choc"]
 	path = extern/choc
 	url = https://github.com/Tracktion/choc.git
+
 [submodule "extern/wclap-cpp"]
 	path = extern/wclap-cpp
 	url = https://github.com/WebCLAP/wclap-cpp.git
+
+[submodule "extern/clasp-gui"]
+	path = extern/clasp-gui
+	url = https://github.com/dfl/clasp-gui.git
