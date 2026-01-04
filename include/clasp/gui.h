@@ -1,22 +1,18 @@
 #pragma once
 
 #include "clasp/scanner.h"
-#include <array>
-#include <atomic>
-#include <chrono>
+#include <clasp-gui/webview.h>
 #include <clap/clap.h>
 #include <functional>
 #include <memory>
-#include <mutex>
 #include <string>
-#include <vector>
 
 namespace clasp {
 
 // Forward declare the plugin instance
 class PluginInstance;
 
-// GUI wrapper using CHOC WebView
+// GUI wrapper using clasp-gui WebView
 class Gui {
 public:
   Gui(PluginInstance *plugin, const PluginManifest &manifest);
@@ -42,15 +38,18 @@ public:
   // Thread-safe parameter updates (can be called from audio thread)
   void queueParameterUpdate(int paramId, float value);
 
+  // Bulk parameter sync (for preset loads)
+  void syncAllParameters();
+
   // MIDI note notifications (can be called from audio thread)
   void queueNoteOn(int channel, int key, float velocity);
   void queueNoteOff(int channel, int key);
 
-  // Process queued updates on main thread (call from on_main_thread)
-  void processQueuedUpdates();
-
   // Thread-safe MIDI CC notifications
   void queueMidiCC(int channel, int cc, int value);
+
+  // Process queued updates on main thread (call from on_main_thread)
+  void processQueuedUpdates();
 
   // Legacy direct notification (use queueParameterUpdate instead)
   void notifyParameterChanged(int paramId, float value);
@@ -63,9 +62,8 @@ private:
   PluginInstance *plugin_;
   PluginManifest manifest_;
 
-  // Platform-specific implementation (using CHOC)
-  struct Impl;
-  std::unique_ptr<Impl> impl_;
+  // clasp-gui WebView
+  std::unique_ptr<clasp_gui::WebView> webview_;
 
   ParamChangeCallback paramChangeCallback_;
 
@@ -74,34 +72,8 @@ private:
   double scale_ = 1.0;
   bool visible_ = false;
 
-  // Thread-safe update queues
-  struct ParamUpdate {
-    int id;
-    float value;
-  };
-  struct NoteEvent {
-    int channel;
-    int key;
-    float velocity;
-    bool isNoteOn;
-  };
-  struct MidiCCEvent {
-    int channel;
-    int cc;
-    int value;
-  };
-
-  std::mutex updateMutex_;
-  std::vector<ParamUpdate> pendingParams_;
-  std::vector<NoteEvent> pendingNotes_;
-  std::vector<MidiCCEvent> pendingCCs_;
-
-  // Throttling (max 60 updates per second per parameter)
-  static constexpr int MAX_PARAMS = 256;
-  std::array<std::chrono::steady_clock::time_point, MAX_PARAMS>
-      lastParamUpdate_;
-  static constexpr auto UPDATE_INTERVAL =
-      std::chrono::milliseconds(16); // ~60Hz
+  // Setup JS bindings for plugin control
+  void setupBindings();
 };
 
 } // namespace clasp

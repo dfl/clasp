@@ -9,3 +9,6 @@
 [submodule "extern/choc"]
 	path = extern/choc
 	url = https://github.com/Tracktion/choc.git
+[submodule "extern/clasp-gui"]
+	path = extern/clasp-gui
+	url = git@github.com:dfl/clasp-gui.git
