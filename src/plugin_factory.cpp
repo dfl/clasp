@@ -291,15 +291,22 @@ public:
 
   // GUI extension
   bool guiIsApiSupported(const char *api, bool isFloating) {
+    std::cerr << "[clasp] guiIsApiSupported api=" << api
+              << " floating=" << isFloating << " hasUi=" << manifest_.ui.hasUi
+              << std::endl;
     if (!manifest_.ui.hasUi)
       return false;
     if (!gui_) {
       gui_ = std::make_unique<Gui>(&instance_, manifest_);
     }
-    return gui_->isApiSupported(api, isFloating);
+    bool supported = gui_->isApiSupported(api, isFloating);
+    std::cerr << "[clasp] guiIsApiSupported result=" << supported << std::endl;
+    return supported;
   }
 
   bool guiCreate(const char *api, bool isFloating) {
+    std::cerr << "[clasp] guiCreate api=" << api << " floating=" << isFloating
+              << std::endl;
     if (!gui_)
       return false;
 
@@ -314,7 +321,9 @@ public:
       }
     });
 
-    return gui_->create(api, isFloating);
+    bool created = gui_->create(api, isFloating);
+    std::cerr << "[clasp] guiCreate result=" << created << std::endl;
+    return created;
   }
 
   void guiDestroy() {
@@ -591,6 +600,7 @@ static const clap_plugin_gui_t guiExtension = {
 
 const void *PluginWrapper::getExtension(const clap_plugin_t *p,
                                         const char *id) {
+  std::cerr << "[clasp] getExtension: " << id << std::endl;
   if (strcmp(id, CLAP_EXT_PARAMS) == 0)
     return &paramsExtension;
   if (strcmp(id, CLAP_EXT_STATE) == 0)
