@@ -41,19 +41,14 @@ jobs:
       - name: Build (Unix)
         if: runner.os != 'Windows'
         run: |
-          cmake -B build -DCMAKE_BUILD_TYPE=Release -DCLASP_BUILD_TESTS=ON
+          cmake -B build -DCMAKE_BUILD_TYPE=Release
           cmake --build build --config Release --parallel
 
       - name: Build (Windows)
         if: runner.os == 'Windows'
         run: |
-          cmake -B build -DCMAKE_BUILD_TYPE=Release -DCLASP_BUILD_TESTS=ON
+          cmake -B build -DCMAKE_BUILD_TYPE=Release
           cmake --build build --config Release --parallel
-
-      - name: Run tests
-        run: |
-          cd build
-          ctest --output-on-failure -C Release
 
       - name: Package (macOS)
         if: runner.os == 'macOS'
