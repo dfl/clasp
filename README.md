@@ -11,7 +11,7 @@
 - **thunder.clap** - A dev-oriented meta-host with hot-reload for rapid iteration
 - **clasp-create** - CLI tool for scaffolding new WCLAP projects
 - **clasp-gui** - WebView library for building plugin UIs with HTML/CSS/JS
-- **Templates** - Ready-to-use project templates for Rust, C++, and AssemblyScript
+- **Templates** - Batteries-included project templates with DSP + WebView UI
 
 ---
 
@@ -47,17 +47,23 @@ make install
 ### 2. Create a New Plugin
 
 ```bash
+# Install clasp-create
 cd packages/clasp-create
 npm install && npm run build
 npm link
 
-# Create a new WCLAP project
-clasp-create my-plugin
-cd my-plugin
+# Create a new WCLAP effect (C++)
+clasp-create "My Gain" --type effect --lang cpp --vendor "My Company"
 
-# Build the DSP (Rust example)
-cd rust && cargo build --target wasm32-wasip1 --release
-cp target/wasm32-wasip1/release/*.wasm ../module.wasm
+# Or create an instrument
+clasp-create "My Synth" --type instrument --lang cpp
+
+cd my_gain
+
+# Build (requires wasi-sdk)
+export WASI_SDK_PREFIX=/path/to/wasi-sdk
+mkdir build && cd build
+cmake .. && make && make install
 ```
 
 ### 3. Load in Your DAW
@@ -148,36 +154,8 @@ clasp/
 ├── packages/
 │   └── clasp-create/       # Node.js CLI for scaffolding
 ├── templates/
-│   └── minimal/            # Minimal WCLAP template
+│   └── gain/               # Gain effect template (C++ + WebView UI)
 └── tests/                  # Unit tests
-```
-
----
-
-## Building DSP Modules
-
-### Rust (Recommended)
-
-```bash
-# Add WASI target
-rustup target add wasm32-wasip1
-
-# Build
-cargo build --target wasm32-wasip1 --release
-```
-
-### C++ (with wasi-sdk)
-
-```bash
-$WASI_SDK/bin/clang++ -O3 -msimd128 \
-    -nostdlib -Wl,--no-entry -Wl,--export-dynamic \
-    -o module.wasm src/plugin.cpp
-```
-
-### AssemblyScript
-
-```bash
-npx asc src/plugin.ts -o module.wasm --optimize
 ```
 
 ---

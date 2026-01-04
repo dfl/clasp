@@ -7,22 +7,35 @@ import { init } from './commands/init.js';
 const program = new Command();
 
 program
-  .name('clasp')
-  .description('CLI for creating and managing WCLAP audio plugins')
+  .name('clasp-create')
+  .description('CLI for creating WCLAP audio plugins')
   .version('1.0.0');
 
 program
   .command('create <name>')
   .description('Create a new WCLAP plugin project')
-  .option('-t, --template <template>', 'Project template (minimal, react, vue)', 'minimal')
-  .option('-l, --lang <language>', 'DSP language (rust, cpp, assemblyscript)', 'rust')
-  .option('--no-ui', 'Skip UI scaffolding')
+  .option('-t, --type <type>', 'Plugin type (effect, instrument)', 'effect')
+  .option('-l, --lang <language>', 'DSP language (cpp, rust)', 'cpp')
+  .option('-v, --vendor <vendor>', 'Vendor name', 'MyCompany')
   .action(create);
 
 program
   .command('init')
   .description('Initialize a WCLAP project in the current directory')
-  .option('-t, --template <template>', 'Project template', 'minimal')
   .action(init);
+
+// Default command - create without subcommand
+program
+  .argument('[name]', 'Plugin name')
+  .option('-t, --type <type>', 'Plugin type (effect, instrument)', 'effect')
+  .option('-l, --lang <language>', 'DSP language (cpp, rust)', 'cpp')
+  .option('-v, --vendor <vendor>', 'Vendor name', 'MyCompany')
+  .action((name, options) => {
+    if (name) {
+      create(name, options);
+    } else {
+      program.help();
+    }
+  });
 
 program.parse();

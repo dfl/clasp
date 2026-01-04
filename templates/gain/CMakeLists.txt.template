@@ -1,0 +1,55 @@
+cmake_minimum_required(VERSION 3.20)
+project({{PLUGIN_NAME_SNAKE}} VERSION 1.0.0 LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+
+# Require wasi-sdk
+if(NOT DEFINED WASI_SDK_PREFIX)
+    if(DEFINED ENV{WASI_SDK_PREFIX})
+        set(WASI_SDK_PREFIX $ENV{WASI_SDK_PREFIX})
+    else()
+        message(FATAL_ERROR "WASI_SDK_PREFIX not set. Install wasi-sdk and set WASI_SDK_PREFIX.")
+    endif()
+endif()
+
+set(CMAKE_TOOLCHAIN_FILE "${WASI_SDK_PREFIX}/share/cmake/wasi-sdk.cmake")
+set(WASI_SDK_SYSROOT "${WASI_SDK_PREFIX}/share/wasi-sysroot")
+
+# CLAP headers (header-only)
+include(FetchContent)
+FetchContent_Declare(
+    clap
+    GIT_REPOSITORY https://github.com/free-audio/clap.git
+    GIT_TAG main
+)
+FetchContent_MakeAvailable(clap)
+
+# Plugin module
+add_executable(module
+    cpp/src/plugin.cpp
+)
+
+target_include_directories(module PRIVATE
+    ${clap_SOURCE_DIR}/include
+)
+
+target_compile_options(module PRIVATE
+    -O3
+    -msimd128
+    -fno-exceptions
+)
+
+target_link_options(module PRIVATE
+    -Wl,--export=clap_entry
+    -Wl,--no-entry
+    -Wl,--allow-undefined
+)
+
+set_target_properties(module PROPERTIES
+    OUTPUT_NAME "module"
+    SUFFIX ".wasm"
+)
+
+# Install to create .wclap bundle
+install(TARGETS module DESTINATION "{{PLUGIN_NAME_SNAKE}}.wclap")
+install(DIRECTORY ui/ DESTINATION "{{PLUGIN_NAME_SNAKE}}.wclap/ui")

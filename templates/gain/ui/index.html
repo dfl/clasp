@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{PLUGIN_NAME}}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .plugin {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 32px;
+            min-width: 300px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .plugin-header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .plugin-header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .plugin-header .vendor {
+            font-size: 12px;
+            color: #888;
+        }
+
+        .param {
+            margin-bottom: 20px;
+        }
+
+        .param-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .param-value {
+            font-family: monospace;
+            color: #4fc3f7;
+        }
+
+        .knob-container {
+            display: flex;
+            justify-content: center;
+            padding: 16px 0;
+        }
+
+        .knob {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(145deg, #2a2a4a, #1a1a2e);
+            box-shadow:
+                4px 4px 12px rgba(0, 0, 0, 0.4),
+                -4px -4px 12px rgba(255, 255, 255, 0.05);
+            position: relative;
+            cursor: pointer;
+        }
+
+        .knob::after {
+            content: '';
+            position: absolute;
+            width: 4px;
+            height: 24px;
+            background: #4fc3f7;
+            border-radius: 2px;
+            top: 8px;
+            left: 50%;
+            transform-origin: bottom center;
+            transform: translateX(-50%) rotate(var(--rotation, 0deg));
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #2a2a4a;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #4fc3f7;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(79, 195, 247, 0.4);
+        }
+
+        .meter {
+            height: 4px;
+            background: #2a2a4a;
+            border-radius: 2px;
+            margin-top: 16px;
+            overflow: hidden;
+        }
+
+        .meter-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4fc3f7, #81d4fa);
+            width: 0%;
+            transition: width 0.1s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="plugin">
+        <div class="plugin-header">
+            <h1>{{PLUGIN_NAME}}</h1>
+            <div class="vendor">{{PLUGIN_VENDOR}}</div>
+        </div>
+
+        <div class="param">
+            <div class="param-label">
+                <span>Gain</span>
+                <span class="param-value" id="gain-value">0.50</span>
+            </div>
+            <div class="knob-container">
+                <div class="knob" id="gain-knob"></div>
+            </div>
+            <input type="range" id="gain-slider" min="0" max="2" step="0.01" value="0.5">
+        </div>
+
+        <div class="meter">
+            <div class="meter-fill" id="meter"></div>
+        </div>
+    </div>
+
+    <script src="clasp.js"></script>
+    <script>
+        const gainSlider = document.getElementById('gain-slider');
+        const gainValue = document.getElementById('gain-value');
+        const gainKnob = document.getElementById('gain-knob');
+        const meter = document.getElementById('meter');
+
+        function updateGain(value) {
+            gainSlider.value = value;
+            gainValue.textContent = value.toFixed(2);
+            // Map 0-2 to -135deg to 135deg
+            const rotation = (value / 2) * 270 - 135;
+            gainKnob.style.setProperty('--rotation', `${rotation}deg`);
+            meter.style.width = `${(value / 2) * 100}%`;
+        }
+
+        // Initialize
+        updateGain(0.5);
+
+        // User input -> plugin
+        gainSlider.addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value);
+            updateGain(value);
+            clasp.call('setParam', 0, value);
+        });
+
+        // Knob drag
+        let dragging = false;
+        let startY, startValue;
+
+        gainKnob.addEventListener('mousedown', (e) => {
+            dragging = true;
+            startY = e.clientY;
+            startValue = parseFloat(gainSlider.value);
+            document.body.style.cursor = 'ns-resize';
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!dragging) return;
+            const delta = (startY - e.clientY) / 100;
+            const newValue = Math.max(0, Math.min(2, startValue + delta));
+            updateGain(newValue);
+            clasp.call('setParam', 0, newValue);
+        });
+
+        document.addEventListener('mouseup', () => {
+            dragging = false;
+            document.body.style.cursor = '';
+        });
+
+        // Plugin -> UI (automation, presets)
+        clasp.on('paramChange', (id, value) => {
+            if (id === 0) {
+                updateGain(value);
+            }
+        });
+
+        // Request initial state
+        clasp.call('getParam', 0).then(value => {
+            if (value !== undefined) updateGain(value);
+        });
+    </script>
+</body>
+</html>
