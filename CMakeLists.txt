@@ -43,6 +43,7 @@ set(CLASP_CORE_SOURCES
     src/params.cpp
     src/state.cpp
     src/gui.cpp
+    src/logger.cpp
 )
 
 add_library(clasp_core STATIC ${CLASP_CORE_SOURCES})

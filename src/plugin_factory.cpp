@@ -1,9 +1,11 @@
 #include "clasp/gui.h"
 #include "clasp/instance.h"
+#include "clasp/logger.h"
 #include "clasp/scanner.h"
 #include <algorithm>
 #include <clap/clap.h>
 #include <clap/ext/draft/webview.h>
+#include <clap/ext/log.h>
 #include <clap/helpers/host-proxy.hh>
 #include <clap/helpers/plugin.hh>
 #include <cstring>
@@ -112,17 +114,29 @@ public:
 
   // CLAP plugin interface
   bool init() { return instance_ && instance_->init(); }
-  void destroy() { if (instance_) instance_->destroy(); }
+  void destroy() {
+    if (instance_)
+      instance_->destroy();
+  }
 
   bool activate(double sampleRate, uint32_t minFrames, uint32_t maxFrames) {
     return instance_ && instance_->activate(sampleRate, minFrames, maxFrames);
   }
 
-  void deactivate() { if (instance_) instance_->deactivate(); }
+  void deactivate() {
+    if (instance_)
+      instance_->deactivate();
+  }
 
   bool startProcessing() { return instance_ && instance_->startProcessing(); }
-  void stopProcessing() { if (instance_) instance_->stopProcessing(); }
-  void reset() { if (instance_) instance_->reset(); }
+  void stopProcessing() {
+    if (instance_)
+      instance_->stopProcessing();
+  }
+  void reset() {
+    if (instance_)
+      instance_->reset();
+  }
 
   clap_process_status process(const clap_process_t *process) {
     bool guiUpdateQueued = false;
@@ -157,7 +171,8 @@ public:
       }
     }
 
-    if (!instance_) return CLAP_PROCESS_ERROR;
+    if (!instance_)
+      return CLAP_PROCESS_ERROR;
     auto status = instance_->process(process);
 
     if (guiUpdateQueued && host_) {
@@ -191,7 +206,8 @@ public:
   }
 
   bool paramsGetValue(clap_id paramId, double *value) const {
-    if (!instance_) return false;
+    if (!instance_)
+      return false;
     *value = instance_->getParameterValue(paramId);
     return true;
   }
@@ -214,7 +230,8 @@ public:
       auto event = in->get(in, i);
       if (event->type == CLAP_EVENT_PARAM_VALUE) {
         auto pv = reinterpret_cast<const clap_event_param_value_t *>(event);
-        if (instance_) instance_->setParameterValue(pv->param_id, pv->value);
+        if (instance_)
+          instance_->setParameterValue(pv->param_id, pv->value);
 
         // Queue GUI update (thread-safe, will be processed on main thread)
         if (gui_) {
@@ -234,13 +251,15 @@ public:
   }
 
   bool stateLoad(const clap_istream_t *stream) {
-    if (!instance_) return false;
+    if (!instance_)
+      return false;
     bool result = instance_->loadState(stream);
 
     // Notify GUI of all parameter values after loading state
     if (result && gui_) {
       for (const auto &param : manifest_.parameters) {
-        float value = static_cast<float>(instance_->getParameterValue(param.id));
+        float value =
+            static_cast<float>(instance_->getParameterValue(param.id));
         gui_->notifyParameterChanged(param.id, value);
       }
     }
@@ -313,7 +332,8 @@ public:
     // Wire up callback for parameter changes from UI
     gui_->setParamChangeCallback([this](int paramId, float value) {
       // Update the internal parameter value
-      if (instance_) instance_->setParameterValue(static_cast<clap_id>(paramId), value);
+      if (instance_)
+        instance_->setParameterValue(static_cast<clap_id>(paramId), value);
 
       // Notify the host that a parameter changed (if host supports it)
       if (hostParams_ && host_) {
@@ -705,6 +725,13 @@ const void *PluginWrapper::getExtension(const clap_plugin_t *p,
         },
     };
     return &tailExt;
+  }
+  if (strcmp(id, CLAP_EXT_LOG) == 0) {
+    static const clap_host_log_t logExt = {
+        .log = [](const clap_host_t *host, clap_log_severity severity,
+                  const char *msg) { Logger::instance().log(severity, msg); },
+    };
+    return &logExt;
   }
   return nullptr;
 }

@@ -98,6 +98,38 @@ The `module.wasm` implements the standard CLAP ABI - the same interface as nativ
 
 > **Note**: Hot reload is always active in `thunder.clap`. For production use without hot reload, use [wclap-bridge](https://github.com/user/wclap-bridge) instead.
 
+### Debug Mode & Logging
+
+**thunder.clap** is built for development with always-on debugging features:
+
+- **Browser Dev Tools**: Right-click in the WebView UI to access the browser console, network inspector, and DOM tools
+- **Centralized Logging**: All logs are automatically sent to:
+  - **stderr** (visible when running DAW from terminal)
+  - **WebView console** (visible in browser dev tools)
+  - **Log file** (`~/.clasp/logs/thunder_YYYYMMDD_HHMMSS.log`)
+
+**Using the Logger from C++:**
+
+```cpp
+#include "clasp/logger.h"
+
+// Use CLAP standard severity levels
+CLASP_LOG_DEBUG("Detailed debugging information");
+CLASP_LOG_INFO("General information");
+CLASP_LOG_WARNING("Warning message");
+CLASP_LOG_ERROR("Error occurred");
+CLASP_LOG_FATAL("Fatal error");
+
+// Or use the logger directly
+clasp::Logger::instance().log(CLAP_LOG_INFO, "Custom message");
+```
+
+**Viewing Logs:**
+
+- **Terminal**: Launch your DAW from terminal to see stderr output
+- **Browser Console**: Right-click in plugin UI → Inspect Element → Console tab
+- **Log Files**: Check `~/.clasp/logs/` for persistent logs with timestamps
+
 ### WebView UI
 
 thunder.clap implements the [CLAP WebView Draft Extension](https://github.com/free-audio/clap/blob/main/include/clap/ext/draft/webview.h):
