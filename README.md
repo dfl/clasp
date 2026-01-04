@@ -15,22 +15,22 @@ CLASP is currently in **Beta (1.0.0-beta)**. We are actively implementing more C
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                      Your DAW (CLAP Host)                    │
-│                    (Bitwig, REAPER, etc.)                    │
+│                      Your DAW (CLAP Host)                   │
+│                    (Bitwig, REAPER, etc.)                   │
 └─────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                   clasp.clap (Native Wrapper)                │
-│                                                              │
-│     Scanner        Wasmtime Engine        WebView GUI        │
-│  (finds .clasp)    (JIT + AOT cache)        (CHOC)           │
+│                   clasp.clap (Native Wrapper)               │
+│                                                             │
+│     Scanner        Wasmtime Engine        WebView GUI       │
+│  (finds .clasp)    (JIT + AOT cache)        (CHOC)          │
 └─────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                      YourPlugin.clasp                        │
-│     plugin.json  +  dsp.wasm  +  ui/index.html (optional)    │
+│                      YourPlugin.clasp                       │
+│     plugin.json  +  dsp.wasm  +  ui/index.html (optional)   │
 └─────────────────────────────────────────────────────────────┘
 ```
 
