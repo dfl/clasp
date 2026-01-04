@@ -7,6 +7,13 @@
 // Using CHOC for JSON parsing
 #include "choc/text/choc_JSON.h"
 
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <limits.h>
+#include <unistd.h>
+#endif
+
 namespace fs = std::filesystem;
 
 namespace clasp {

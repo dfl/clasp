@@ -9,7 +9,7 @@ string(REGEX MATCH "^[0-9]+\\.[0-9]+\\.[0-9]+" CLASP_VERSION "${CLASP_VERSION_FU
 project(clasp VERSION ${CLASP_VERSION} LANGUAGES CXX C)
 message(STATUS "CLASP version: ${CLASP_VERSION_FULL}")
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
@@ -76,7 +76,10 @@ elseif(WIN32)
     # WebView2 will be loaded dynamically by CHOC
 elseif(UNIX)
     find_package(PkgConfig REQUIRED)
-    pkg_check_modules(WEBKIT2 REQUIRED webkit2gtk-4.0)
+    pkg_check_modules(WEBKIT2 webkit2gtk-4.1)
+    if(NOT WEBKIT2_FOUND)
+        pkg_check_modules(WEBKIT2 REQUIRED webkit2gtk-4.0)
+    endif()
     target_include_directories(clasp_core PUBLIC ${WEBKIT2_INCLUDE_DIRS})
     target_link_libraries(clasp_core PUBLIC ${WEBKIT2_LIBRARIES})
 endif()
